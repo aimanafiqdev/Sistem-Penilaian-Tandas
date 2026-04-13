@@ -388,53 +388,8 @@ export default function Form({ audit }: PageProps) {
                             </div>
                         </div>
 
-                        {/* Diperiksa Oleh */}
-                        <div className="p-5 space-y-4 border-b border-gray-100">
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Diperiksa Oleh</p>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nama Pegawai</label>
-                                <input type="text" value={namaPegawai}
-                                    onChange={(e) => setNamaPegawai(e.target.value)}
-                                    placeholder="Nama penuh pegawai pemeriksa"
-                                    className={inputClass} />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Cadangan</label>
-                                <textarea value={cadangan}
-                                    onChange={(e) => setCadangan(e.target.value)}
-                                    rows={2}
-                                    placeholder="Cadangan penambahbaikan (jika ada)"
-                                    className={`${inputClass} resize-none`} />
-                            </div>
-
-                            <SignatureCanvas
-                                label="Tandatangan &amp; Cop Pegawai"
-                                onSave={setTandaPegawai}
-                            />
-                        </div>
-
-                        {/* Wakil Premis */}
-                        <div className="p-5 space-y-4 border-b border-gray-100">
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Wakil Premis</p>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nama Wakil Premis</label>
-                                <input type="text" value={namaWakil}
-                                    onChange={(e) => setNamaWakil(e.target.value)}
-                                    placeholder="Nama penuh wakil premis"
-                                    className={inputClass} />
-                            </div>
-
-                            <SignatureCanvas
-                                label="Tandatangan &amp; Cop Wakil Premis"
-                                onSave={setTandaWakil}
-                            />
-                        </div>
-
                         {/* Gambar Bukti */}
-                        <div className="p-5 space-y-3">
+                        <div className="p-5 space-y-3 border-b border-gray-100">
                             <div className="flex items-center justify-between">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Gambar Bukti</p>
                                 <span className="text-xs text-gray-400">{gambar.length}/5 gambar</span>
@@ -482,6 +437,51 @@ export default function Form({ audit }: PageProps) {
                                 </>
                             )}
                             <p className="text-xs text-gray-300">JPEG, PNG atau WebP · Maks 5MB setiap gambar</p>
+                        </div>
+
+                        {/* Diperiksa Oleh */}
+                        <div className="p-5 space-y-4 border-b border-gray-100">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Diperiksa Oleh</p>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nama Pegawai</label>
+                                <input type="text" value={namaPegawai}
+                                    onChange={(e) => setNamaPegawai(e.target.value)}
+                                    placeholder="Nama penuh pegawai pemeriksa"
+                                    className={inputClass} />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Cadangan</label>
+                                <textarea value={cadangan}
+                                    onChange={(e) => setCadangan(e.target.value)}
+                                    rows={2}
+                                    placeholder="Cadangan penambahbaikan (jika ada)"
+                                    className={`${inputClass} resize-none`} />
+                            </div>
+
+                            <SignatureCanvas
+                                label="Tandatangan &amp; Cop Pegawai"
+                                onSave={setTandaPegawai}
+                            />
+                        </div>
+
+                        {/* Wakil Premis */}
+                        <div className="p-5 space-y-4">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Wakil Premis</p>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nama Wakil Premis</label>
+                                <input type="text" value={namaWakil}
+                                    onChange={(e) => setNamaWakil(e.target.value)}
+                                    placeholder="Nama penuh wakil premis"
+                                    className={inputClass} />
+                            </div>
+
+                            <SignatureCanvas
+                                label="Tandatangan &amp; Cop Wakil Premis"
+                                onSave={setTandaWakil}
+                            />
                         </div>
 
                         {/* Navigation */}
