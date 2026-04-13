@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 interface Props {
     children: ReactNode;
@@ -64,18 +64,32 @@ const navItems = [
 export default function AppLayout({ children, title, subtitle, action }: Props) {
     const { flash } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isActive = (href: string) => currentPath === href || currentPath.startsWith(href + '/');
+
+    const closeSidebar = () => setSidebarOpen(false);
 
     return (
         <div className="min-h-screen bg-slate-50 flex">
 
-            {/* ── Sidebar ── */}
-            <aside className="w-60 shrink-0 bg-slate-900 flex flex-col fixed top-0 left-0 h-screen z-30">
+            {/* ── Mobile backdrop ── */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+                    onClick={closeSidebar}
+                />
+            )}
 
+            {/* ── Sidebar ── */}
+            <aside className={`
+                w-60 shrink-0 bg-slate-900 flex flex-col fixed top-0 left-0 h-screen z-30
+                transition-transform duration-300
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            `}>
                 {/* Brand */}
                 <div className="px-5 py-5 border-b border-slate-800">
-                    <Link href="/" className="flex items-center gap-3">
+                    <Link href="/" className="flex items-center gap-3" onClick={closeSidebar}>
                         <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shrink-0">
                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -103,6 +117,7 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
                                         <Link
                                             key={item.href}
                                             href={item.href}
+                                            onClick={closeSidebar}
                                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                                                 active
                                                     ? 'bg-blue-600 text-white shadow-sm'
@@ -130,30 +145,46 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
             </aside>
 
             {/* ── Main Content ── */}
-            <div className="flex-1 flex flex-col ml-60 min-h-screen">
+            <div className="flex-1 flex flex-col lg:ml-60 min-h-screen min-w-0">
 
                 {/* Top Bar */}
-                <header className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
-                    <div>
-                        {title && <h1 className="text-lg font-bold text-gray-900">{title}</h1>}
-                        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+                <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center gap-3 sticky top-0 z-20">
+
+                    {/* Hamburger — mobile only */}
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen(true)}
+                        className="lg:hidden p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+                        aria-label="Buka menu"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <div className="flex-1 min-w-0">
+                        {title && <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">{title}</h1>}
+                        {subtitle && <p className="text-xs text-gray-400 mt-0.5 truncate">{subtitle}</p>}
                     </div>
-                    {action ?? (
-                        <Link
-                            href="/toilets/create"
-                            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Tambah Tandas
-                        </Link>
-                    )}
+
+                    <div className="shrink-0">
+                        {action ?? (
+                            <Link
+                                href="/toilets/create"
+                                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl transition-all shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span className="hidden sm:inline">Tambah Tandas</span>
+                            </Link>
+                        )}
+                    </div>
                 </header>
 
                 {/* Flash Messages */}
                 {(flash?.success || flash?.error) && (
-                    <div className="px-6 pt-4">
+                    <div className="px-4 sm:px-6 pt-4">
                         {flash.success && (
                             <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-xl">
                                 <svg className="w-4 h-4 shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
@@ -174,7 +205,7 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
                 )}
 
                 {/* Page Content */}
-                <main className="flex-1 px-6 py-5">
+                <main className="flex-1 px-4 sm:px-6 py-5">
                     {children}
                 </main>
             </div>

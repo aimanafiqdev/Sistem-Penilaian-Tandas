@@ -260,7 +260,7 @@ export default function Index({ audits, stats }: PageProps) {
                                 type="date"
                                 value={dateFrom}
                                 onChange={(e) => setDateFrom(e.target.value)}
-                                className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function Index({ audits, stats }: PageProps) {
                                 type="date"
                                 value={dateTo}
                                 onChange={(e) => setDateTo(e.target.value)}
-                                className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
 
@@ -386,7 +386,7 @@ export default function Index({ audits, stats }: PageProps) {
                             <div key={audit.id}
                                 className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden"
                             >
-                                <div className="flex items-start gap-4 p-4">
+                                <div className="flex items-start gap-3 sm:gap-4 p-4">
 
                                     {/* Percentage Circle */}
                                     <div className="shrink-0 w-14 h-14 relative mt-0.5">

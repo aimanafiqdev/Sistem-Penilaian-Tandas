@@ -279,16 +279,16 @@ export default function Form({ audit }: PageProps) {
                 {/* ── Header Card ── */}
                 <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="absolute inset-0 bg-linear-to-br from-slate-50 to-white" />
-                    <div className="relative px-5 py-4 flex items-center justify-between gap-4">
+                    <div className="relative px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
                                 <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="font-bold text-gray-900 text-sm leading-tight">{audit.toilet.nama_premis}</p>
-                                {audit.toilet.alamat && <p className="text-xs text-gray-400 leading-tight mt-0.5 truncate max-w-xs">{audit.toilet.alamat}</p>}
+                                {audit.toilet.alamat && <p className="text-xs text-gray-400 leading-tight mt-0.5 truncate">{audit.toilet.alamat}</p>}
                             </div>
                         </div>
                         <div className="flex gap-3 shrink-0">
@@ -549,29 +549,29 @@ export default function Form({ audit }: PageProps) {
             </div>
 
             {/* ── Sticky Score Panel ── */}
-            <div className="fixed bottom-0 left-60 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 px-6 py-3 shadow-lg">
-                <div className="max-w-2xl mx-auto flex items-center gap-5">
-                    <div className="flex items-center gap-4 flex-1">
+            <div className="fixed bottom-0 left-0 lg:left-60 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 px-4 sm:px-6 py-3 shadow-lg">
+                <div className="max-w-2xl mx-auto flex items-center gap-3 sm:gap-5">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
                         <div>
                             <p className="text-xs text-gray-400 leading-none">Markah</p>
-                            <p className="text-xl font-black text-gray-900 leading-tight">
+                            <p className="text-base sm:text-xl font-black text-gray-900 leading-tight">
                                 {score.total}
                                 <span className="text-xs font-medium text-gray-300 ml-1">/ {score.max}</span>
                             </p>
                         </div>
-                        <div className="w-px h-10 bg-gray-100" />
+                        <div className="w-px h-8 bg-gray-100" />
                         <div>
-                            <p className="text-xs text-gray-400 leading-none">Peratusan</p>
-                            <p className={`text-xl font-black leading-tight ${
+                            <p className="text-xs text-gray-400 leading-none">Peratus</p>
+                            <p className={`text-base sm:text-xl font-black leading-tight ${
                                 score.peratus >= 91 ? 'text-emerald-500' :
                                 score.peratus >= 71 ? 'text-blue-500' :
                                 score.peratus >= 51 ? 'text-amber-500' : 'text-red-500'
                             }`}>{score.peratus.toFixed(1)}%</p>
                         </div>
-                        <div className="w-px h-10 bg-gray-100" />
+                        <div className="w-px h-8 bg-gray-100" />
                         <div>
                             <p className="text-xs text-gray-400 leading-none mb-1">Rating</p>
-                            <Stars count={score.bintang} size={5} />
+                            <Stars count={score.bintang} size={4} />
                         </div>
                         <div className="flex-1 hidden sm:block">
                             <div className="flex justify-between text-xs text-gray-300 mb-1">
