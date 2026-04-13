@@ -221,6 +221,27 @@ export default function Form({ audit }: PageProps) {
     const [namaWakil, setNamaWakil]     = useState('');
     const [tandaPegawai, setTandaPegawai] = useState<string | null>(null);
     const [tandaWakil, setTandaWakil]     = useState<string | null>(null);
+    const [gambar, setGambar]             = useState<File[]>([]);
+    const [gambarPreviews, setGambarPreviews] = useState<string[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleGambarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        const remaining = 5 - gambar.length;
+        const toAdd = files.slice(0, remaining);
+        setGambar((prev) => [...prev, ...toAdd]);
+        toAdd.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => setGambarPreviews((prev) => [...prev, ev.target!.result as string]);
+            reader.readAsDataURL(file);
+        });
+        e.target.value = '';
+    };
+
+    const removeGambar = (index: number) => {
+        setGambar((prev) => prev.filter((_, i) => i !== index));
+        setGambarPreviews((prev) => prev.filter((_, i) => i !== index));
+    };
 
     const score = useMemo(
         () => calculateScore(answers, adaRuangLampin, adaTandasOku),
@@ -263,6 +284,7 @@ export default function Form({ audit }: PageProps) {
                 nama_wakil:           namaWakil,
                 tandatangan_pegawai:  tandaPegawai,
                 tandatangan_wakil:    tandaWakil,
+                gambar_bukti:         gambar,
             },
             { onFinish: () => setSubmitting(false) }
         );
@@ -394,7 +416,7 @@ export default function Form({ audit }: PageProps) {
                         </div>
 
                         {/* Wakil Premis */}
-                        <div className="p-5 space-y-4">
+                        <div className="p-5 space-y-4 border-b border-gray-100">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Wakil Premis</p>
 
                             <div>
@@ -409,6 +431,57 @@ export default function Form({ audit }: PageProps) {
                                 label="Tandatangan &amp; Cop Wakil Premis"
                                 onSave={setTandaWakil}
                             />
+                        </div>
+
+                        {/* Gambar Bukti */}
+                        <div className="p-5 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Gambar Bukti</p>
+                                <span className="text-xs text-gray-400">{gambar.length}/5 gambar</span>
+                            </div>
+
+                            {gambarPreviews.length > 0 && (
+                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                    {gambarPreviews.map((src, i) => (
+                                        <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200">
+                                            <img src={src} alt={`Gambar ${i + 1}`} className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeGambar(i)}
+                                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {gambar.length < 5 && (
+                                <>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleGambarChange}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl text-sm text-gray-400 hover:text-blue-600 transition-all"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Tambah Gambar {gambar.length > 0 ? `(${5 - gambar.length} lagi)` : '(maks 5)'}
+                                    </button>
+                                </>
+                            )}
+                            <p className="text-xs text-gray-300">JPEG, PNG atau WebP · Maks 5MB setiap gambar</p>
                         </div>
 
                         {/* Navigation */}

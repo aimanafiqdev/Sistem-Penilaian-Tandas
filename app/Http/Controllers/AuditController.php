@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Audit;
 use App\Models\Toilet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class AuditController extends Controller
@@ -263,6 +264,8 @@ class AuditController extends Controller
             'nama_wakil'          => 'nullable|string|max:255',
             'tandatangan_pegawai' => 'nullable|string',
             'tandatangan_wakil'   => 'nullable|string',
+            'gambar_bukti'        => 'nullable|array|max:5',
+            'gambar_bukti.*'      => 'image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);
 
         $score = self::calculateScore(
@@ -270,6 +273,13 @@ class AuditController extends Controller
             $validated['ada_ruang_lampin'],
             $validated['ada_tandas_oku'],
         );
+
+        $gambarPaths = [];
+        if ($request->hasFile('gambar_bukti')) {
+            foreach ($request->file('gambar_bukti') as $file) {
+                $gambarPaths[] = $file->store("audits/{$audit->id}", 'public');
+            }
+        }
 
         $audit->update([
             'items'               => $validated['items'],
@@ -284,6 +294,7 @@ class AuditController extends Controller
             'nama_wakil'          => $validated['nama_wakil'] ?? null,
             'tandatangan_pegawai' => $validated['tandatangan_pegawai'] ?? null,
             'tandatangan_wakil'   => $validated['tandatangan_wakil'] ?? null,
+            'gambar_bukti'        => empty($gambarPaths) ? null : $gambarPaths,
         ]);
 
         return redirect()->route('audits.result', $audit->id);
@@ -308,6 +319,10 @@ class AuditController extends Controller
                 'nama_wakil'          => $audit->nama_wakil,
                 'tandatangan_pegawai' => $audit->tandatangan_pegawai,
                 'tandatangan_wakil'   => $audit->tandatangan_wakil,
+                'gambar_bukti'        => collect($audit->gambar_bukti ?? [])
+                    ->map(fn($p) => Storage::url($p))
+                    ->values()
+                    ->all(),
                 'toilet'              => [
                     'id'          => $audit->toilet->id,
                     'nama_premis' => $audit->toilet->nama_premis,

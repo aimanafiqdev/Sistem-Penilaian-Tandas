@@ -23,6 +23,7 @@ class Audit extends Model
         'nama_wakil',
         'tandatangan_pegawai',
         'tandatangan_wakil',
+        'gambar_bukti',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class Audit extends Model
         'ada_ruang_lampin'=> 'boolean',
         'ada_tandas_oku'  => 'boolean',
         'peratus'         => 'float',
+        'gambar_bukti'    => 'array',
     ];
 
     public function toilet(): BelongsTo
