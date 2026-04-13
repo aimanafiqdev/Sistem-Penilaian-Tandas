@@ -36,7 +36,7 @@ Route::get('/dashboard', function () {
 
     $auditsBulanIni = \App\Models\Audit::with('toilet')
         ->whereNotNull('peratus')
-        ->whereRaw("DATE_FORMAT(tarikh, '%Y-%m') = ?", [$bulanIni])
+        ->whereRaw("TO_CHAR(tarikh, 'YYYY-MM') = ?", [$bulanIni])
         ->get()
         ->sortByDesc('tarikh')
         ->unique('toilet_id'); // latest audit per toilet this month
