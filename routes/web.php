@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\ToiletController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,10 +31,43 @@ Route::get('/dashboard', function () {
         'created_at'   => $t->created_at->format('d/m/Y'),
     ]);
 
+    // Best & worst audit this month (latest audit per toilet)
+    $bulanIni = now()->format('Y-m');
+
+    $auditsBulanIni = \App\Models\Audit::with('toilet')
+        ->whereNotNull('peratus')
+        ->whereRaw("DATE_FORMAT(tarikh, '%Y-%m') = ?", [$bulanIni])
+        ->get()
+        ->sortByDesc('tarikh')
+        ->unique('toilet_id'); // latest audit per toilet this month
+
+    $formatAudit = fn($a) => $a ? [
+        'id'          => $a->id,
+        'nama_premis' => $a->toilet->nama_premis,
+        'alamat'      => $a->toilet->alamat,
+        'peratus'     => $a->peratus,
+        'bintang'     => $a->bintang,
+        'tarikh'      => $a->tarikh->format('d/m/Y'),
+        'toilet_id'   => $a->toilet_id,
+    ] : null;
+
+    $cemerlang = $formatAudit($auditsBulanIni->sortByDesc('peratus')->first());
+    $tercorot  = $formatAudit($auditsBulanIni->sortBy('peratus')->first());
+
     return \Inertia\Inertia::render('Dashboard', [
-        'stats'  => $stats,
-        'recent' => $recent,
+        'stats'     => $stats,
+        'recent'    => $recent,
+        'cemerlang' => $cemerlang,
+        'tercorot'  => $tercorot,
+        'bulan'     => now()->translatedFormat('F Y'),
     ]);
 })->name('dashboard');
 
 Route::resource('toilets', ToiletController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
+Route::get('/audits/create', [AuditController::class, 'create'])->name('audits.create');
+Route::post('/audits', [AuditController::class, 'store'])->name('audits.store');
+Route::get('/audits/{audit}/form', [AuditController::class, 'form'])->name('audits.form');
+Route::post('/audits/{audit}/submit', [AuditController::class, 'submit'])->name('audits.submit');
+Route::get('/audits/{audit}/result', [AuditController::class, 'result'])->name('audits.result');
