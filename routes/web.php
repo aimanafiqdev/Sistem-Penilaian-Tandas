@@ -54,12 +54,41 @@ Route::get('/dashboard', function () {
     $cemerlang = $formatAudit($auditsBulanIni->sortByDesc('peratus')->first());
     $tercorot  = $formatAudit($auditsBulanIni->sortBy('peratus')->first());
 
+    // Monthly trend: last 6 months average peratus
+    $trend = collect(range(5, 0))->map(function ($i) {
+        $month = now()->subMonths($i);
+        $avg   = \App\Models\Audit::whereNotNull('peratus')
+            ->whereRaw("TO_CHAR(tarikh, 'YYYY-MM') = ?", [$month->format('Y-m')])
+            ->avg('peratus');
+        return [
+            'label'   => $month->format('M'),
+            'peratus' => $avg ? round((float) $avg, 1) : null,
+        ];
+    })->values();
+
+    // Recent audits
+    $recentAudits = \App\Models\Audit::with('toilet')
+        ->whereNotNull('peratus')
+        ->orderBy('tarikh', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->take(5)
+        ->get()
+        ->map(fn ($a) => [
+            'id'          => $a->id,
+            'tarikh'      => $a->tarikh->format('d/m/Y'),
+            'peratus'     => $a->peratus,
+            'bintang'     => $a->bintang,
+            'nama_premis' => $a->toilet->nama_premis,
+        ]);
+
     return \Inertia\Inertia::render('Dashboard', [
-        'stats'     => $stats,
-        'recent'    => $recent,
-        'cemerlang' => $cemerlang,
-        'tercorot'  => $tercorot,
-        'bulan'     => now()->translatedFormat('F Y'),
+        'stats'        => $stats,
+        'recent'       => $recent,
+        'cemerlang'    => $cemerlang,
+        'tercorot'     => $tercorot,
+        'bulan'        => now()->translatedFormat('F Y'),
+        'trend'        => $trend,
+        'recentAudits' => $recentAudits,
     ]);
 })->name('dashboard');
 
