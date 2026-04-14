@@ -297,7 +297,8 @@ class AuditController extends Controller
             'gambar_bukti'        => empty($gambarPaths) ? null : $gambarPaths,
         ]);
 
-        return redirect()->route('audits.result', $audit->id);
+        return redirect()->route('audits.result', $audit->id)
+            ->with('success', 'Audit berjaya disimpan.');
     }
 
     public function result(Audit $audit)

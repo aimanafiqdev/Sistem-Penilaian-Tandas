@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 interface Props {
     children: ReactNode;
@@ -11,6 +11,12 @@ interface Props {
 interface PageProps {
     flash?: { success?: string; error?: string };
     [key: string]: unknown;
+}
+
+interface ToastItem {
+    id: number;
+    message: string;
+    type: 'success' | 'error';
 }
 
 const navItems = [
@@ -61,17 +67,124 @@ const navItems = [
     },
 ];
 
+// ── Toast Component ───────────────────────────────────────────────────────────
+function Toast({ item, onClose }: { item: ToastItem; onClose: (id: number) => void }) {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        // Slide in
+        const inTimer = setTimeout(() => setVisible(true), 10);
+
+        // Auto-dismiss after 4s
+        const outTimer = setTimeout(() => {
+            setVisible(false);
+            setTimeout(() => onClose(item.id), 300);
+        }, 4000);
+
+        return () => {
+            clearTimeout(inTimer);
+            clearTimeout(outTimer);
+        };
+    }, []);
+
+    const handleClose = () => {
+        setVisible(false);
+        setTimeout(() => onClose(item.id), 300);
+    };
+
+    const isSuccess = item.type === 'success';
+
+    return (
+        <div className={`
+            flex items-start gap-3 w-80 max-w-[calc(100vw-2rem)]
+            bg-white rounded-2xl shadow-xl border px-4 py-3.5
+            transform transition-all duration-300 ease-out
+            ${isSuccess ? 'border-emerald-200' : 'border-red-200'}
+            ${visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
+        `}>
+            {/* Icon */}
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isSuccess ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                {isSuccess ? (
+                    <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                ) : (
+                    <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                )}
+            </div>
+
+            {/* Message */}
+            <div className="flex-1 min-w-0 pt-0.5">
+                <p className={`text-sm font-semibold leading-snug ${isSuccess ? 'text-emerald-800' : 'text-red-800'}`}>
+                    {isSuccess ? 'Berjaya' : 'Ralat'}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.message}</p>
+            </div>
+
+            {/* Close */}
+            <button
+                type="button"
+                onClick={handleClose}
+                className="shrink-0 p-1 rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors mt-0.5"
+            >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            {/* Progress bar */}
+            <div className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl overflow-hidden ${isSuccess ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                <div
+                    className={`h-full ${isSuccess ? 'bg-emerald-400' : 'bg-red-400'}`}
+                    style={{
+                        animation: 'toast-progress 4s linear forwards',
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────────
 export default function AppLayout({ children, title, subtitle, action }: Props) {
     const { flash } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [toasts, setToasts] = useState<ToastItem[]>([]);
 
     const isActive = (href: string) => currentPath === href || currentPath.startsWith(href + '/');
-
     const closeSidebar = () => setSidebarOpen(false);
+
+    const removeToast = (id: number) =>
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+
+    // Watch flash messages from server
+    useEffect(() => {
+        if (flash?.success) {
+            setToasts((prev) => [...prev, { id: Date.now(), message: flash.success!, type: 'success' }]);
+        }
+        if (flash?.error) {
+            setToasts((prev) => [...prev, { id: Date.now() + 1, message: flash.error!, type: 'error' }]);
+        }
+    }, [flash?.success, flash?.error]);
 
     return (
         <div className="min-h-screen bg-slate-50 flex">
+
+            {/* ── Toast Container ── */}
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 items-end">
+                <style>{`
+                    @keyframes toast-progress {
+                        from { width: 100%; }
+                        to   { width: 0%; }
+                    }
+                `}</style>
+                {toasts.map((t) => (
+                    <Toast key={t.id} item={t} onClose={removeToast} />
+                ))}
+            </div>
 
             {/* ── Mobile backdrop ── */}
             {sidebarOpen && (
@@ -149,8 +262,6 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
 
                 {/* Top Bar */}
                 <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center gap-3 sticky top-0 z-20">
-
-                    {/* Hamburger — mobile only */}
                     <button
                         type="button"
                         onClick={() => setSidebarOpen(true)}
@@ -181,28 +292,6 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
                         )}
                     </div>
                 </header>
-
-                {/* Flash Messages */}
-                {(flash?.success || flash?.error) && (
-                    <div className="px-4 sm:px-6 pt-4">
-                        {flash.success && (
-                            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-xl">
-                                <svg className="w-4 h-4 shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-medium">{flash.success}</span>
-                            </div>
-                        )}
-                        {flash.error && (
-                            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-800 text-sm px-4 py-3 rounded-xl">
-                                <svg className="w-4 h-4 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-medium">{flash.error}</span>
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Page Content */}
                 <main className="flex-1 px-4 sm:px-6 py-5">
