@@ -277,7 +277,7 @@ class AuditController extends Controller
         $gambarPaths = [];
         if ($request->hasFile('gambar_bukti')) {
             foreach ($request->file('gambar_bukti') as $file) {
-                $gambarPaths[] = $file->store("audits/{$audit->id}", 'public');
+                $gambarPaths[] = $file->store("audits/{$audit->id}");
             }
         }
 
