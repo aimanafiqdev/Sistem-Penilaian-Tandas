@@ -210,7 +210,7 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
                             </svg>
                         </div>
                         <div className="min-w-0">
-                            <p className="font-bold text-white text-sm leading-tight">E-Rating Tandas</p>
+                            <p className="font-bold text-white text-sm leading-tight">Dreamy Toilet</p>
                             <p className="text-xs text-slate-400 leading-tight">Sistem Penilaian KKM</p>
                         </div>
                     </Link>

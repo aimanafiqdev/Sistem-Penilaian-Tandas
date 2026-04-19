@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — E-Rating Tandas` : 'E-Rating Tandas'),
+    title: (title) => (title ? `${title} — Dreamy Toilet` : 'Dreamy Toilet'),
     resolve: (name) => {
         const pages = import.meta.glob<{ default: ComponentType }>('./Pages/**/*.tsx', { eager: true });
         const page = pages[`./Pages/${name}.tsx`];
