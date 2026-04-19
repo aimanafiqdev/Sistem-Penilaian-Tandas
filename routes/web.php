@@ -3,10 +3,17 @@
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\ToiletController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
+
+// Serve audit images from local storage
+Route::get('/audit-images/{path}', function (string $path) {
+    abort_unless(Storage::exists($path), 404);
+    return Storage::response($path);
+})->where('path', '.*')->name('audit.image');
 
 Route::get('/dashboard', function () {
     $toilets = \App\Models\Toilet::with('toiletTypes')->latest()->get();

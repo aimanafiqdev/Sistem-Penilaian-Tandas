@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Audit;
 use App\Models\Toilet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class AuditController extends Controller
@@ -321,7 +320,7 @@ class AuditController extends Controller
                 'tandatangan_pegawai' => $audit->tandatangan_pegawai,
                 'tandatangan_wakil'   => $audit->tandatangan_wakil,
                 'gambar_bukti'        => collect($audit->gambar_bukti ?? [])
-                    ->map(fn($p) => Storage::url($p))
+                    ->map(fn($p) => url('/audit-images/' . $p))
                     ->values()
                     ->all(),
                 'toilet'              => [
