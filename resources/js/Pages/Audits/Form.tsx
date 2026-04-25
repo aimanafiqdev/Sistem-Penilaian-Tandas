@@ -19,7 +19,38 @@ const SIGN_COLORS = {
     border: 'border-slate-200', accent: 'bg-slate-100',
 };
 
-// ── Score color helpers ───────────────────────────────────────────────────────
+// ── Score label & color helpers ───────────────────────────────────────────────
+
+const SCORE_LABELS: Record<number, Record<number, string>> = {
+    5: { 5: 'Cemerlang', 4: 'Baik', 3: 'Memuaskan', 2: 'Kurang Memuaskan', 1: 'Lemah', 0: 'Tiada / Rosak' },
+    3: { 3: 'Cemerlang', 2: 'Memuaskan', 1: 'Lemah', 0: 'Tiada / Rosak' },
+    2: { 2: 'Cemerlang', 1: 'Memuaskan', 0: 'Tiada / Rosak' },
+    1: { 1: 'Cemerlang', 0: 'Tiada / Rosak' },
+};
+
+function scoreLabel(val: number, max: number): string {
+    return SCORE_LABELS[max]?.[val] ?? '';
+}
+
+function ScoreGuide({ max }: { max: number }) {
+    const entries = SCORE_LABELS[max];
+    if (!entries) return null;
+    return (
+        <div className="flex flex-wrap gap-1.5">
+            {Object.entries(entries).sort(([a], [b]) => Number(b) - Number(a)).map(([v, label]) => {
+                const num = Number(v);
+                const { btn } = scoreColor(num, max);
+                return (
+                    <span key={v} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${
+                        num === 0 ? 'bg-gray-100 text-gray-400' : btn
+                    }`}>
+                        {v} — {label}
+                    </span>
+                );
+            })}
+        </div>
+    );
+}
 
 function scoreColor(val: number, max: number) {
     if (val === 0) return { btn: 'bg-gray-100 text-gray-400', ring: '' };
@@ -70,6 +101,7 @@ function ScorePicker({ criterion, value, onChange }: {
                         const { btn: b } = scoreColor(v, criterion.max);
                         return (
                             <button key={v} type="button" onClick={() => onChange(criterion.id, v)}
+                                title={scoreLabel(v, criterion.max)}
                                 className={`w-7 h-7 rounded-lg text-xs font-bold transition-all duration-150 ${
                                     active ? `${b} shadow-md scale-110` : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:scale-105'
                                 }`}
@@ -79,6 +111,9 @@ function ScorePicker({ criterion, value, onChange }: {
                         );
                     })}
                 </div>
+                {value > 0 && (
+                    <span className="text-xs text-gray-400 italic">{scoreLabel(value, criterion.max)}</span>
+                )}
                 <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-300"
                         style={{
@@ -559,6 +594,25 @@ export default function Form({ audit }: PageProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Scoring Guide */}
+                        {showCriteria && (
+                            <div className="px-5 py-3 border-b border-gray-50 bg-gray-50/50">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Panduan Skor</p>
+                                <div className="space-y-1.5">
+                                    {[5, 3, 2, 1].map((maxVal) => {
+                                        const hasIt = section!.groups.some((g) => g.criteria.some((c) => c.max === maxVal));
+                                        if (!hasIt) return null;
+                                        return (
+                                            <div key={maxVal} className="flex items-start gap-2">
+                                                <span className="text-xs text-gray-400 w-12 shrink-0 pt-0.5">0 – {maxVal}:</span>
+                                                <ScoreGuide max={maxVal} />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Criteria list */}
                         {showCriteria ? (
