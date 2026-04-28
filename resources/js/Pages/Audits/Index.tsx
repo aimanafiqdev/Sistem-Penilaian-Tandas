@@ -212,7 +212,7 @@ function KategoriReportCard({ report, bulan }: { report: KategoriReport; bulan: 
                             />
                         </div>
                         <span className="text-xs font-bold text-emerald-600 shrink-0">
-                            {report.cemerlang.peratus}%
+                            {Math.round(report.cemerlang.peratus)}%
                         </span>
                     </div>
                 </div>
@@ -238,7 +238,7 @@ function KategoriReportCard({ report, bulan }: { report: KategoriReport; bulan: 
                             />
                         </div>
                         <span className="text-xs font-bold text-red-600 shrink-0">
-                            {report.tercorot.peratus}%
+                            {Math.round(report.tercorot.peratus)}%
                         </span>
                     </div>
                 </div>

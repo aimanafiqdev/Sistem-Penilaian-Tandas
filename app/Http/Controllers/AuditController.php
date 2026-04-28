@@ -199,19 +199,24 @@ class AuditController extends Controller
         ];
 
         $kategoriReport = Category::orderBy('nama')->get()->map(function ($cat) use ($bulanAudits, $fmt) {
+            // Latest audit per toilet this month, for this category
             $catAudits = $bulanAudits
                 ->filter(fn($a) => $a->toilet->category?->id === $cat->id)
                 ->sortByDesc('tarikh')
-                ->unique('toilet_id');
+                ->unique('toilet_id')
+                ->values(); // reset keys before sorting by peratus
 
-            if ($catAudits->isEmpty()) return null;
+            // Need at least 2 different toilets to have a meaningful cemerlang vs tercorot
+            if ($catAudits->count() < 2) return null;
+
+            $sorted = $catAudits->sortByDesc('peratus')->values();
 
             return [
                 'kategori'       => $cat->nama,
                 'jumlah_audit'   => $catAudits->count(),
                 'purata_peratus' => round((float) $catAudits->avg('peratus'), 1),
-                'cemerlang'      => $fmt($catAudits->sortByDesc('peratus')->first()),
-                'tercorot'       => $fmt($catAudits->sortBy('peratus')->first()),
+                'cemerlang'      => $fmt($sorted->first()),
+                'tercorot'       => $fmt($sorted->last()),
             ];
         })->filter()->values();
 
