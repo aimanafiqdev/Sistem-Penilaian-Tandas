@@ -10,6 +10,7 @@ interface AuditRecord {
     max_markah: number;
     peratus: number;
     bintang: number;
+    kategori: string;
     toilet: { id: number; nama_premis: string; alamat: string | null };
 }
 
@@ -21,9 +22,27 @@ interface Stats {
     tiada_bintang: number;
 }
 
+interface KategoriReportEntry {
+    id: number;
+    nama_premis: string;
+    peratus: number;
+    bintang: number;
+    tarikh: string;
+}
+
+interface KategoriReport {
+    kategori: string;
+    jumlah_audit: number;
+    purata_peratus: number;
+    cemerlang: KategoriReportEntry;
+    tercorot: KategoriReportEntry;
+}
+
 interface PageProps {
     audits: AuditRecord[];
     stats: Stats;
+    kategoriReport: KategoriReport[];
+    bulan: string;
 }
 
 // "dd/mm/yyyy" → "yyyy-mm-dd" for ISO comparison
@@ -74,17 +93,181 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     { key: 'terendah',  label: 'Markah Terendah'   },
 ];
 
-export default function Index({ audits, stats }: PageProps) {
-    const [search,    setSearch]    = useState('');
-    const [dateFrom,  setDateFrom]  = useState('');   // yyyy-mm-dd (HTML date input)
-    const [dateTo,    setDateTo]    = useState('');
+function AuditCard({ audit }: { audit: AuditRecord }) {
+    const rating = ratingLabel(audit.bintang);
+    return (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
+            <div className="flex items-start gap-3 sm:gap-4 p-4">
+                {/* Percentage Circle */}
+                <div className="shrink-0 w-14 h-14 relative mt-0.5">
+                    <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+                        <circle cx="28" cy="28" r="22" fill="none" stroke="#f3f4f6" strokeWidth="5" />
+                        <circle cx="28" cy="28" r="22" fill="none"
+                            stroke={
+                                audit.peratus >= 91 ? '#10b981' :
+                                audit.peratus >= 71 ? '#3b82f6' :
+                                audit.peratus >= 51 ? '#f59e0b' : '#ef4444'
+                            }
+                            strokeWidth="5"
+                            strokeLinecap="round"
+                            strokeDasharray={`${(audit.peratus / 100) * 138.2} 138.2`}
+                        />
+                    </svg>
+                    <span className={`absolute inset-0 flex items-center justify-center text-xs font-black ${percentColor(audit.peratus)}`}>
+                        {Math.round(audit.peratus)}%
+                    </span>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 mb-1">
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-gray-900 text-sm leading-tight">
+                                {audit.toilet.nama_premis}
+                            </p>
+                            {audit.toilet.alamat && (
+                                <p className="text-xs text-gray-400 mt-0.5 truncate">
+                                    {audit.toilet.alamat}
+                                </p>
+                            )}
+                        </div>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ${rating.bg} ${rating.text}`}>
+                            {rating.label}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <Stars count={audit.bintang} />
+                        <span className="text-xs text-gray-400">
+                            {audit.total_markah}/{audit.max_markah} markah
+                        </span>
+                        <span className="text-xs text-gray-300">•</span>
+                        <span className="text-xs text-gray-400">
+                            {audit.tarikh}&nbsp;&nbsp;{audit.masa}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-1.5 shrink-0">
+                    <Link
+                        href={`/audits/${audit.id}/result`}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Lihat
+                    </Link>
+                    <Link
+                        href={`/audits/create?toilet_id=${audit.toilet.id}`}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Audit Semula
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function KategoriReportCard({ report, bulan }: { report: KategoriReport; bulan: string }) {
+    return (
+        <div className="bg-linear-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-4 mb-3">
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Laporan Bulanan — {bulan}
+                </p>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400">{report.jumlah_audit} tandas diaudit</span>
+                    <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                        Purata {report.purata_peratus}%
+                    </span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                {/* Cemerlang */}
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-700">Cemerlang</span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-800 leading-tight mb-1 truncate">
+                        {report.cemerlang.nama_premis}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-emerald-100 rounded-full h-1.5">
+                            <div
+                                className="bg-emerald-500 h-1.5 rounded-full"
+                                style={{ width: `${report.cemerlang.peratus}%` }}
+                            />
+                        </div>
+                        <span className="text-xs font-bold text-emerald-600 shrink-0">
+                            {report.cemerlang.peratus}%
+                        </span>
+                    </div>
+                </div>
+
+                {/* Tercorot */}
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shrink-0">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <span className="text-xs font-bold text-red-700">Tercorot</span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-800 leading-tight mb-1 truncate">
+                        {report.tercorot.nama_premis}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-red-100 rounded-full h-1.5">
+                            <div
+                                className="bg-red-500 h-1.5 rounded-full"
+                                style={{ width: `${report.tercorot.peratus}%` }}
+                            />
+                        </div>
+                        <span className="text-xs font-bold text-red-600 shrink-0">
+                            {report.tercorot.peratus}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function Index({ audits, stats, kategoriReport, bulan }: PageProps) {
+    const [search,     setSearch]     = useState('');
+    const [dateFrom,   setDateFrom]   = useState('');
+    const [dateTo,     setDateTo]     = useState('');
     const [starFilter, setStarFilter] = useState<number | null>(null);
-    const [sort,      setSort]      = useState<SortKey>('terbaru');
+    const [filterCat,  setFilterCat]  = useState('');
+    const [sort,       setSort]       = useState<SortKey>('terbaru');
+
+    const categories = useMemo(() => {
+        return [...new Set(audits.map((a) => a.kategori))].sort();
+    }, [audits]);
+
+    const reportByKat = useMemo(() => {
+        const m = new Map<string, KategoriReport>();
+        for (const r of kategoriReport) m.set(r.kategori, r);
+        return m;
+    }, [kategoriReport]);
 
     const filtered = useMemo(() => {
         let list = [...audits];
 
-        // 1. Search by nama premis
         if (search.trim()) {
             const q = search.trim().toLowerCase();
             list = list.filter((a) =>
@@ -93,20 +276,11 @@ export default function Index({ audits, stats }: PageProps) {
             );
         }
 
-        // 2. Date range — tarikh is "dd/mm/yyyy", dateFrom/dateTo are "yyyy-mm-dd"
-        if (dateFrom) {
-            list = list.filter((a) => toISO(a.tarikh) >= dateFrom);
-        }
-        if (dateTo) {
-            list = list.filter((a) => toISO(a.tarikh) <= dateTo);
-        }
+        if (dateFrom) list = list.filter((a) => toISO(a.tarikh) >= dateFrom);
+        if (dateTo)   list = list.filter((a) => toISO(a.tarikh) <= dateTo);
+        if (starFilter !== null) list = list.filter((a) => a.bintang === starFilter);
+        if (filterCat) list = list.filter((a) => a.kategori === filterCat);
 
-        // 3. Star filter
-        if (starFilter !== null) {
-            list = list.filter((a) => a.bintang === starFilter);
-        }
-
-        // 4. Sort
         list.sort((a, b) => {
             if (sort === 'terbaru')   return toISO(b.tarikh).localeCompare(toISO(a.tarikh)) || b.masa.localeCompare(a.masa);
             if (sort === 'terlama')   return toISO(a.tarikh).localeCompare(toISO(b.tarikh)) || a.masa.localeCompare(b.masa);
@@ -116,15 +290,30 @@ export default function Index({ audits, stats }: PageProps) {
         });
 
         return list;
-    }, [audits, search, dateFrom, dateTo, starFilter, sort]);
+    }, [audits, search, dateFrom, dateTo, starFilter, filterCat, sort]);
 
-    const hasFilter = search || dateFrom || dateTo || starFilter !== null;
+    const grouped = useMemo(() => {
+        const m = new Map<string, AuditRecord[]>();
+        for (const a of filtered) {
+            if (!m.has(a.kategori)) m.set(a.kategori, []);
+            m.get(a.kategori)!.push(a);
+        }
+        return m;
+    }, [filtered]);
+
+    const visibleCategories = useMemo(() => {
+        if (filterCat) return categories.filter((c) => c === filterCat && grouped.has(c));
+        return categories.filter((c) => grouped.has(c));
+    }, [categories, filterCat, grouped]);
+
+    const hasFilter = !!(search || dateFrom || dateTo || starFilter !== null || filterCat);
 
     function clearFilters() {
         setSearch('');
         setDateFrom('');
         setDateTo('');
         setStarFilter(null);
+        setFilterCat('');
         setSort('terbaru');
     }
 
@@ -212,7 +401,7 @@ export default function Index({ audits, stats }: PageProps) {
             {audits.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-4 space-y-3">
 
-                    {/* Row 1: Search + Sort */}
+                    {/* Row 1: Search + Category + Sort */}
                     <div className="flex gap-3 flex-wrap">
                         {/* Search */}
                         <div className="relative flex-1 min-w-48">
@@ -227,6 +416,28 @@ export default function Index({ audits, stats }: PageProps) {
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
                             />
+                        </div>
+
+                        {/* Category */}
+                        <div className="relative">
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h2a1 1 0 010 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h10a1 1 0 010 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 010 2H4a1 1 0 01-1-1z" />
+                            </svg>
+                            <select
+                                value={filterCat}
+                                onChange={(e) => setFilterCat(e.target.value)}
+                                className="pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white cursor-pointer"
+                            >
+                                <option value="">Semua Kategori</option>
+                                {categories.map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                            <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                         </div>
 
                         {/* Sort */}
@@ -253,7 +464,6 @@ export default function Index({ audits, stats }: PageProps) {
 
                     {/* Row 2: Date range + Star filter */}
                     <div className="flex gap-3 flex-wrap items-center">
-                        {/* Date From */}
                         <div className="flex items-center gap-2">
                             <label className="text-xs text-gray-400 whitespace-nowrap">Dari</label>
                             <input
@@ -273,7 +483,6 @@ export default function Index({ audits, stats }: PageProps) {
                             />
                         </div>
 
-                        {/* Divider */}
                         <div className="w-px h-6 bg-gray-200 hidden sm:block" />
 
                         {/* Star filter pills */}
@@ -315,7 +524,6 @@ export default function Index({ audits, stats }: PageProps) {
                             })}
                         </div>
 
-                        {/* Clear */}
                         {hasFilter && (
                             <button
                                 onClick={clearFilters}
@@ -379,87 +587,29 @@ export default function Index({ audits, stats }: PageProps) {
                     </button>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {filtered.map((audit) => {
-                        const rating = ratingLabel(audit.bintang);
+                <div className="space-y-8">
+                    {visibleCategories.map((cat) => {
+                        const catAudits = grouped.get(cat)!;
+                        const report    = reportByKat.get(cat);
                         return (
-                            <div key={audit.id}
-                                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden"
-                            >
-                                <div className="flex items-start gap-3 sm:gap-4 p-4">
+                            <div key={cat}>
+                                {/* Category heading */}
+                                <div className="flex items-center gap-3 mb-3">
+                                    <h3 className="text-sm font-bold text-gray-700">{cat}</h3>
+                                    <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                        {catAudits.length} audit
+                                    </span>
+                                    <div className="flex-1 h-px bg-gray-200" />
+                                </div>
 
-                                    {/* Percentage Circle */}
-                                    <div className="shrink-0 w-14 h-14 relative mt-0.5">
-                                        <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
-                                            <circle cx="28" cy="28" r="22" fill="none" stroke="#f3f4f6" strokeWidth="5" />
-                                            <circle cx="28" cy="28" r="22" fill="none"
-                                                stroke={
-                                                    audit.peratus >= 91 ? '#10b981' :
-                                                    audit.peratus >= 71 ? '#3b82f6' :
-                                                    audit.peratus >= 51 ? '#f59e0b' : '#ef4444'
-                                                }
-                                                strokeWidth="5"
-                                                strokeLinecap="round"
-                                                strokeDasharray={`${(audit.peratus / 100) * 138.2} 138.2`}
-                                            />
-                                        </svg>
-                                        <span className={`absolute inset-0 flex items-center justify-center text-xs font-black ${percentColor(audit.peratus)}`}>
-                                            {Math.round(audit.peratus)}%
-                                        </span>
-                                    </div>
+                                {/* Monthly report card */}
+                                {report && <KategoriReportCard report={report} bulan={bulan} />}
 
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start gap-2 mb-1">
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-gray-900 text-sm leading-tight">
-                                                    {audit.toilet.nama_premis}
-                                                </p>
-                                                {audit.toilet.alamat && (
-                                                    <p className="text-xs text-gray-400 mt-0.5 truncate">
-                                                        {audit.toilet.alamat}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <span className={`text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ${rating.bg} ${rating.text}`}>
-                                                {rating.label}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <Stars count={audit.bintang} />
-                                            <span className="text-xs text-gray-400">
-                                                {audit.total_markah}/{audit.max_markah} markah
-                                            </span>
-                                            <span className="text-xs text-gray-300">•</span>
-                                            <span className="text-xs text-gray-400">
-                                                {audit.tarikh}&nbsp;&nbsp;{audit.masa}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex flex-col gap-1.5 shrink-0">
-                                        <Link
-                                            href={`/audits/${audit.id}/result`}
-                                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                            Lihat
-                                        </Link>
-                                        <Link
-                                            href={`/audits/create?toilet_id=${audit.toilet.id}`}
-                                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                            Audit Semula
-                                        </Link>
-                                    </div>
+                                {/* Audit list */}
+                                <div className="space-y-3">
+                                    {catAudits.map((audit) => (
+                                        <AuditCard key={audit.id} audit={audit} />
+                                    ))}
                                 </div>
                             </div>
                         );

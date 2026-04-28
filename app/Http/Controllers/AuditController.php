@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Audit;
+use App\Models\Category;
 use App\Models\Toilet;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -172,7 +173,9 @@ class AuditController extends Controller
 
     public function index()
     {
-        $audits = Audit::with('toilet')
+        $bulanIni = now()->format('Y-m');
+
+        $audits = Audit::with('toilet.category')
             ->whereNotNull('peratus')
             ->latest()
             ->get();
@@ -185,6 +188,33 @@ class AuditController extends Controller
             'tiada_bintang'  => $audits->where('bintang', 0)->count(),
         ];
 
+        $bulanAudits = $audits->filter(fn($a) => $a->tarikh->format('Y-m') === $bulanIni);
+
+        $fmt = fn($a) => [
+            'id'          => $a->id,
+            'nama_premis' => $a->toilet->nama_premis,
+            'peratus'     => $a->peratus,
+            'bintang'     => $a->bintang,
+            'tarikh'      => $a->tarikh->format('d/m/Y'),
+        ];
+
+        $kategoriReport = Category::orderBy('nama')->get()->map(function ($cat) use ($bulanAudits, $fmt) {
+            $catAudits = $bulanAudits
+                ->filter(fn($a) => $a->toilet->category?->id === $cat->id)
+                ->sortByDesc('tarikh')
+                ->unique('toilet_id');
+
+            if ($catAudits->isEmpty()) return null;
+
+            return [
+                'kategori'       => $cat->nama,
+                'jumlah_audit'   => $catAudits->count(),
+                'purata_peratus' => round((float) $catAudits->avg('peratus'), 1),
+                'cemerlang'      => $fmt($catAudits->sortByDesc('peratus')->first()),
+                'tercorot'       => $fmt($catAudits->sortBy('peratus')->first()),
+            ];
+        })->filter()->values();
+
         return Inertia::render('Audits/Index', [
             'audits' => $audits->map(fn($a) => [
                 'id'           => $a->id,
@@ -194,13 +224,16 @@ class AuditController extends Controller
                 'max_markah'   => $a->max_markah,
                 'peratus'      => $a->peratus,
                 'bintang'      => $a->bintang,
+                'kategori'     => $a->toilet->category?->nama ?? 'Tiada Kategori',
                 'toilet'       => [
-                    'id'         => $a->toilet->id,
-                    'nama_premis'=> $a->toilet->nama_premis,
-                    'alamat'     => $a->toilet->alamat,
+                    'id'          => $a->toilet->id,
+                    'nama_premis' => $a->toilet->nama_premis,
+                    'alamat'      => $a->toilet->alamat,
                 ],
             ]),
-            'stats' => $stats,
+            'stats'          => $stats,
+            'kategoriReport' => $kategoriReport,
+            'bulan'          => now()->translatedFormat('F Y'),
         ]);
     }
 
