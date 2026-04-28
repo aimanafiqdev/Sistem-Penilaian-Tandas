@@ -8,7 +8,6 @@ use Illuminate\Database\Seeder;
 
 class AuditSeeder extends Seeder
 {
-    // All criteria with their max marks
     private static array $CRITERIA = [
         'A1a' => 5, 'A1b' => 5, 'A1c' => 5, 'A1d' => 3,
         'A2a' => 5, 'A2b' => 5,
@@ -45,21 +44,16 @@ class AuditSeeder extends Seeder
         'I27a' => 1, 'I27b' => 3,
     ];
 
-    private static array $OPTIONAL = ['H26a', 'H26b', 'I27a', 'I27b'];
-
     private function generateItems(float $ratio, bool $adaH, bool $adaI): array
     {
         $items = [];
         foreach (self::$CRITERIA as $id => $max) {
-            // Skip optional criteria if not applicable
             if (in_array($id, ['H26a', 'H26b']) && !$adaH) continue;
             if (in_array($id, ['I27a', 'I27b']) && !$adaI) continue;
 
-            // Randomise slightly around the target ratio
-            $noise  = (mt_rand(-15, 15) / 100);
+            $noise  = mt_rand(-15, 15) / 100;
             $factor = min(1.0, max(0.0, $ratio + $noise));
-            $score  = (int) round($max * $factor);
-            $items[$id] = $score;
+            $items[$id] = (int) round($max * $factor);
         }
         return $items;
     }
@@ -72,9 +66,9 @@ class AuditSeeder extends Seeder
             $total += min(max(0, (int) $val), $max);
         }
 
-        if ($adaH && $adaI)       $max = 251;
-        elseif ($adaH || $adaI)   $max = 249;
-        else                       $max = 245;
+        if ($adaH && $adaI)     $max = 251;
+        elseif ($adaH || $adaI) $max = 249;
+        else                    $max = 245;
 
         $peratus = min(round(($total / $max) * 100, 2), 100);
 
@@ -91,25 +85,51 @@ class AuditSeeder extends Seeder
     public function run(): void
     {
         $toilets = Toilet::all()->keyBy('nama_premis');
+        $now     = now();
 
         // [nama_premis => [ratio, adaH, adaI]]
-        // ratio = target score percentage (0.0 – 1.0)
         $profiles = [
-            'Hospital Kuala Lumpur'          => ['ratio' => 0.93, 'adaH' => true,  'adaI' => true],
-            'Klinik Kesihatan Chow Kit'      => ['ratio' => 0.67, 'adaH' => false, 'adaI' => false],
-            'Pejabat Kesihatan Daerah Petaling' => ['ratio' => 0.75, 'adaH' => false, 'adaI' => true],
-            'Hospital Selayang'              => ['ratio' => 0.88, 'adaH' => true,  'adaI' => true],
-            'Klinik Kesihatan Titiwangsa'    => ['ratio' => 0.42, 'adaH' => false, 'adaI' => false],
-            'Hospital Putrajaya'             => ['ratio' => 0.95, 'adaH' => true,  'adaI' => true],
+            // Bangunan Kerajaan
+            'Hospital Kuala Lumpur'              => ['ratio' => 0.93, 'adaH' => true,  'adaI' => true],
+            'Klinik Kesihatan Chow Kit'          => ['ratio' => 0.67, 'adaH' => false, 'adaI' => false],
+            'Pejabat Kesihatan Daerah Petaling'  => ['ratio' => 0.75, 'adaH' => false, 'adaI' => true],
+
+            // Hotel
+            'Hotel Mandarin Oriental KL'         => ['ratio' => 0.91, 'adaH' => true,  'adaI' => true],
+            'Hotel Sunway Pyramid'               => ['ratio' => 0.78, 'adaH' => false, 'adaI' => false],
+
+            // Pasar Awam
+            'Pasar Awam Chow Kit'                => ['ratio' => 0.48, 'adaH' => false, 'adaI' => false],
+            'Pasar Awam Pudu'                    => ['ratio' => 0.55, 'adaH' => false, 'adaI' => false],
+
+            // Pusat Beli-belah
+            'Suria KLCC'                         => ['ratio' => 0.95, 'adaH' => true,  'adaI' => true],
+            'Mid Valley Megamall'                => ['ratio' => 0.88, 'adaH' => true,  'adaI' => true],
+
+            // Sekolah
+            'SMK Tun Hussein Onn'                => ['ratio' => 0.63, 'adaH' => false, 'adaI' => false],
+            'SK Bukit Bintang'                   => ['ratio' => 0.54, 'adaH' => false, 'adaI' => false],
+
+            // Taman Rekreasi
+            'Taman Tasik Titiwangsa'             => ['ratio' => 0.42, 'adaH' => false, 'adaI' => false],
+            'Taman Botani Perdana'               => ['ratio' => 0.68, 'adaH' => false, 'adaI' => true],
+
+            // Terminal Pengangkutan Awam
+            'Terminal Bersepadu Selatan (TBS)'   => ['ratio' => 0.82, 'adaH' => true,  'adaI' => true],
+
+            // Stesen Minyak
+            'Petronas Jalan Ampang'              => ['ratio' => 0.59, 'adaH' => false, 'adaI' => false],
+
+            // Tandas Awam PBT
+            'Tandas Awam Dataran Merdeka'        => ['ratio' => 0.45, 'adaH' => false, 'adaI' => false],
         ];
 
-        // Dates to seed: 2 months ago, last month, and this month (2 audits)
-        $now     = now();
-        $months  = [
+        // Seed audits for last 3 months
+        $months = [
             $now->copy()->subMonths(2)->startOfMonth(),
             $now->copy()->subMonth()->startOfMonth(),
             $now->copy()->startOfMonth(),
-            $now->copy()->startOfMonth()->addDays(10),
+            $now->copy()->startOfMonth()->addDays(12),
         ];
 
         foreach ($profiles as $nama => $profile) {
@@ -117,7 +137,6 @@ class AuditSeeder extends Seeder
             if (!$toilet) continue;
 
             foreach ($months as $index => $baseDate) {
-                // Vary the ratio slightly between audits for the same toilet
                 $variation = ($index % 2 === 0) ? 0.0 : (mt_rand(-8, 8) / 100);
                 $ratio     = min(1.0, max(0.0, $profile['ratio'] + $variation));
 
@@ -126,27 +145,22 @@ class AuditSeeder extends Seeder
                 $items = $this->generateItems($ratio, $adaH, $adaI);
                 $score = $this->calculateScore($items, $adaH, $adaI);
 
-                // Random day within the month
-                $day    = mt_rand(1, 28);
-                $tarikh = $baseDate->copy()->addDays($day - 1);
-
-                // Don't seed future dates
+                $tarikh = $baseDate->copy()->addDays(mt_rand(0, 27));
                 if ($tarikh->gt($now)) continue;
 
-                $masa = sprintf('%02d:%02d', mt_rand(8, 16), mt_rand(0, 59));
-
-                Audit::create([
-                    'toilet_id'        => $toilet->id,
-                    'tarikh'           => $tarikh->toDateString(),
-                    'masa'             => $masa,
-                    'items'            => $items,
-                    'ada_ruang_lampin' => $adaH,
-                    'ada_tandas_oku'   => $adaI,
-                    'total_markah'     => $score['total'],
-                    'max_markah'       => $score['max'],
-                    'peratus'          => $score['peratus'],
-                    'bintang'          => $score['bintang'],
-                ]);
+                Audit::firstOrCreate(
+                    ['toilet_id' => $toilet->id, 'tarikh' => $tarikh->toDateString()],
+                    [
+                        'masa'             => sprintf('%02d:%02d', mt_rand(8, 16), mt_rand(0, 59)),
+                        'items'            => $items,
+                        'ada_ruang_lampin' => $adaH,
+                        'ada_tandas_oku'   => $adaI,
+                        'total_markah'     => $score['total'],
+                        'max_markah'       => $score['max'],
+                        'peratus'          => $score['peratus'],
+                        'bintang'          => $score['bintang'],
+                    ]
+                );
             }
         }
     }
