@@ -9,12 +9,22 @@ interface ToiletTypeRow {
     bilangan_kubikel: string;
 }
 
+interface Category {
+    id: number;
+    nama: string;
+}
+
 interface FormData {
+    category_id: string;
     nama_premis: string;
     alamat: string;
     latitude: string;
     longitude: string;
     toilet_types: ToiletTypeRow[];
+}
+
+interface Props {
+    categories: Category[];
 }
 
 const TYPE_OPTIONS: { value: ToiletTypeOption; label: string; desc: string; color: string }[] = [
@@ -58,8 +68,9 @@ const inputClass = (hasError: boolean) =>
         hasError ? 'border-red-400 bg-red-50 focus:ring-red-400' : 'border-gray-300 bg-white hover:border-gray-400'
     }`;
 
-export default function Create() {
+export default function Create({ categories }: Props) {
     const { data, setData, post, processing, errors } = useForm<FormData>({
+        category_id:  '',
         nama_premis:  '',
         alamat:       '',
         latitude:     '',
@@ -112,6 +123,19 @@ export default function Create() {
                         </div>
 
                         <div className="px-6 py-5 space-y-4">
+                            <InputField label="Kategori Premis" error={(errors as Record<string, string>).category_id}>
+                                <select
+                                    value={data.category_id}
+                                    onChange={(e) => setData('category_id', e.target.value)}
+                                    className={inputClass(!!(errors as Record<string, string>).category_id)}
+                                >
+                                    <option value="">-- Pilih Kategori --</option>
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>{c.nama}</option>
+                                    ))}
+                                </select>
+                            </InputField>
+
                             <InputField label="Nama Premis" required error={errors.nama_premis}>
                                 <input
                                     type="text"

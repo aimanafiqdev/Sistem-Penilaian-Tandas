@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
+        $this->call(CategorySeeder::class);
         $this->call(ToiletSeeder::class);
         $this->call(AuditSeeder::class);
     }

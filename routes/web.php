@@ -88,14 +88,51 @@ Route::get('/dashboard', function () {
             'nama_premis' => $a->toilet->nama_premis,
         ]);
 
+    // Category breakdown: best & worst per category this month
+    $kategoriLaporan = \App\Models\Category::with('toilets')
+        ->get()
+        ->map(function ($cat) use ($bulanIni) {
+            $toiletIds = $cat->toilets->pluck('id');
+            if ($toiletIds->isEmpty()) return null;
+
+            $audits = \App\Models\Audit::with('toilet')
+                ->whereNotNull('peratus')
+                ->whereIn('toilet_id', $toiletIds)
+                ->whereRaw("TO_CHAR(tarikh, 'YYYY-MM') = ?", [$bulanIni])
+                ->get()
+                ->sortByDesc('tarikh')
+                ->unique('toilet_id');
+
+            if ($audits->isEmpty()) return null;
+
+            $fmt = fn ($a) => [
+                'id'          => $a->id,
+                'nama_premis' => $a->toilet->nama_premis,
+                'peratus'     => $a->peratus,
+                'bintang'     => $a->bintang,
+                'tarikh'      => $a->tarikh->format('d/m/Y'),
+            ];
+
+            return [
+                'kategori'       => $cat->nama,
+                'jumlah_audit'   => $audits->count(),
+                'purata_peratus' => round((float) $audits->avg('peratus'), 1),
+                'cemerlang'      => $fmt($audits->sortByDesc('peratus')->first()),
+                'tercorot'       => $fmt($audits->sortBy('peratus')->first()),
+            ];
+        })
+        ->filter()
+        ->values();
+
     return \Inertia\Inertia::render('Dashboard', [
-        'stats'        => $stats,
-        'recent'       => $recent,
-        'cemerlang'    => $cemerlang,
-        'tercorot'     => $tercorot,
-        'bulan'        => now()->translatedFormat('F Y'),
-        'trend'        => $trend,
-        'recentAudits' => $recentAudits,
+        'stats'           => $stats,
+        'recent'          => $recent,
+        'cemerlang'       => $cemerlang,
+        'tercorot'        => $tercorot,
+        'bulan'           => now()->translatedFormat('F Y'),
+        'trend'           => $trend,
+        'recentAudits'    => $recentAudits,
+        'kategoriLaporan' => $kategoriLaporan,
     ]);
 })->name('dashboard');
 

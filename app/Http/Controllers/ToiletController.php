@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Toilet;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ class ToiletController extends Controller
     {
         return [
             'id'           => $toilet->id,
+            'category_id'  => $toilet->category_id,
+            'category'     => $toilet->category ? ['id' => $toilet->category->id, 'nama' => $toilet->category->nama] : null,
             'nama_premis'  => $toilet->nama_premis,
             'alamat'       => $toilet->alamat,
             'latitude'     => $toilet->latitude,
@@ -31,6 +34,7 @@ class ToiletController extends Controller
     {
         return [
             'rules' => [
+                'category_id'                             => 'nullable|exists:categories,id',
                 'nama_premis'                             => 'required|string|max:255',
                 'alamat'                                  => 'nullable|string|max:500',
                 'latitude'                                => 'nullable|numeric|between:-90,90',
@@ -41,6 +45,7 @@ class ToiletController extends Controller
             ],
             'messages' => [
                 'nama_premis.required'                    => 'Nama premis diperlukan.',
+                'category_id.exists'                      => 'Kategori tidak sah.',
                 'toilet_types.required'                   => 'Sekurang-kurangnya satu jenis tandas diperlukan.',
                 'toilet_types.min'                        => 'Sekurang-kurangnya satu jenis tandas diperlukan.',
                 'toilet_types.*.type.required'            => 'Jenis tandas diperlukan.',
@@ -52,9 +57,14 @@ class ToiletController extends Controller
         ];
     }
 
+    private function allCategories(): array
+    {
+        return Category::orderBy('nama')->get()->map(fn ($c) => ['id' => $c->id, 'nama' => $c->nama])->toArray();
+    }
+
     public function index(): Response
     {
-        $toilets = Toilet::with('toiletTypes')
+        $toilets = Toilet::with(['toiletTypes', 'category'])
             ->latest()
             ->get()
             ->map(fn ($toilet) => $this->mapToilet($toilet));
@@ -66,7 +76,9 @@ class ToiletController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Toilets/Create');
+        return Inertia::render('Toilets/Create', [
+            'categories' => $this->allCategories(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -75,6 +87,7 @@ class ToiletController extends Controller
         $validated = $request->validate($v['rules'], $v['messages']);
 
         $toilet = Toilet::create([
+            'category_id' => $validated['category_id'] ?? null,
             'nama_premis' => $validated['nama_premis'],
             'alamat'      => $validated['alamat'] ?? null,
             'latitude'    => $validated['latitude'] ?? null,
@@ -96,7 +109,8 @@ class ToiletController extends Controller
     public function edit(Toilet $toilet): Response
     {
         return Inertia::render('Toilets/Edit', [
-            'toilet' => $this->mapToilet($toilet->load('toiletTypes')),
+            'toilet'     => $this->mapToilet($toilet->load(['toiletTypes', 'category'])),
+            'categories' => $this->allCategories(),
         ]);
     }
 
@@ -106,6 +120,7 @@ class ToiletController extends Controller
         $validated = $request->validate($v['rules'], $v['messages']);
 
         $toilet->update([
+            'category_id' => $validated['category_id'] ?? null,
             'nama_premis' => $validated['nama_premis'],
             'alamat'      => $validated['alamat'] ?? null,
             'latitude'    => $validated['latitude'] ?? null,

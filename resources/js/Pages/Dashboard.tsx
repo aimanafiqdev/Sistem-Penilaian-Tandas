@@ -49,6 +49,22 @@ interface AuditRanking {
     toilet_id: number;
 }
 
+interface KategoriItem {
+    id: number;
+    nama_premis: string;
+    peratus: number;
+    bintang: number;
+    tarikh: string;
+}
+
+interface KategoriLaporan {
+    kategori: string;
+    jumlah_audit: number;
+    purata_peratus: number;
+    cemerlang: KategoriItem;
+    tercorot: KategoriItem;
+}
+
 interface Props {
     stats: Stats;
     recent: RecentToilet[];
@@ -57,6 +73,7 @@ interface Props {
     tercorot: AuditRanking | null;
     bulan: string;
     trend: TrendPoint[];
+    kategoriLaporan: KategoriLaporan[];
 }
 
 const TYPE_CONFIG: Record<ToiletTypeOption, { label: string; bg: string; text: string; dot: string }> = {
@@ -296,7 +313,79 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default function Dashboard({ stats, recent, recentAudits, cemerlang, tercorot, bulan, trend }: Props) {
+// ── Category Laporan Card ─────────────────────────────────────────────────────
+function KategoriCard({ item }: { item: KategoriLaporan }) {
+    function pctColor(p: number) {
+        if (p >= 91) return 'text-emerald-600';
+        if (p >= 71) return 'text-blue-600';
+        if (p >= 51) return 'text-amber-600';
+        return 'text-red-500';
+    }
+    function pctBg(p: number) {
+        if (p >= 91) return 'bg-emerald-500';
+        if (p >= 71) return 'bg-blue-500';
+        if (p >= 51) return 'bg-amber-500';
+        return 'bg-red-500';
+    }
+
+    const same = item.cemerlang.id === item.tercorot.id;
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-2">
+                <p className="text-xs font-bold text-gray-800 leading-snug flex-1">{item.kategori}</p>
+                <div className="shrink-0 text-right">
+                    <p className={`text-sm font-black ${pctColor(item.purata_peratus)}`}>{item.purata_peratus}%</p>
+                    <p className="text-[10px] text-gray-400">purata</p>
+                </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="px-4 pt-2 pb-1">
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-700 ${pctBg(item.purata_peratus)}`}
+                        style={{ width: `${item.purata_peratus}%` }} />
+                </div>
+            </div>
+
+            {/* Best / Worst */}
+            <div className="px-4 pb-4 pt-2 space-y-2">
+                {/* Cemerlang */}
+                <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-xl">
+                    <span className="w-5 h-5 bg-emerald-500 rounded-md flex items-center justify-center shrink-0">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-emerald-800 truncate">{item.cemerlang.nama_premis}</p>
+                    </div>
+                    <span className="text-xs font-black text-emerald-700 shrink-0">{item.cemerlang.peratus.toFixed(1)}%</span>
+                </div>
+
+                {/* Tercorot */}
+                {!same && (
+                    <div className="flex items-center gap-2 p-2 bg-red-50 rounded-xl">
+                        <span className="w-5 h-5 bg-red-400 rounded-md flex items-center justify-center shrink-0">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 13l-4 4L5 7" />
+                            </svg>
+                        </span>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-red-800 truncate">{item.tercorot.nama_premis}</p>
+                        </div>
+                        <span className="text-xs font-black text-red-600 shrink-0">{item.tercorot.peratus.toFixed(1)}%</span>
+                    </div>
+                )}
+
+                <p className="text-[10px] text-gray-400 text-right">{item.jumlah_audit} audit bulan ini</p>
+            </div>
+        </div>
+    );
+}
+
+export default function Dashboard({ stats, recent, recentAudits, cemerlang, tercorot, bulan, trend, kategoriLaporan }: Props) {
     const [tab, setTab] = useState<'premis' | 'audit'>('premis');
 
     const typeStats = [
@@ -357,6 +446,26 @@ export default function Dashboard({ stats, recent, recentAudits, cemerlang, terc
                 <RankingCard audit={cemerlang} type="cemerlang" bulan={bulan} />
                 <RankingCard audit={tercorot}  type="tercorot"  bulan={bulan} />
             </div>
+
+            {/* ── Laporan Mengikut Kategori ── */}
+            {kategoriLaporan.length > 0 && (
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <p className="text-sm font-bold text-gray-900">Laporan Mengikut Kategori</p>
+                            <p className="text-xs text-gray-400 mt-0.5">Cemerlang &amp; tercorot setiap kategori — {bulan}</p>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg">
+                            {kategoriLaporan.length} kategori aktif
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {kategoriLaporan.map((item) => (
+                            <KategoriCard key={item.kategori} item={item} />
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* ── Bottom Row ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
