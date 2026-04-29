@@ -114,25 +114,45 @@ export default function Index({ toilets, categories }: PageProps) {
                 </div>
 
                 {categories.length > 0 && (
-                    <div className="bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm flex items-center gap-3 sm:w-72 shrink-0">
-                        <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-                        </svg>
-                        <select
-                            value={filterCat}
-                            onChange={(e) => setFilterCat(e.target.value)}
-                            className="flex-1 text-sm text-gray-700 bg-transparent focus:outline-none cursor-pointer"
-                        >
-                            <option value="">Semua Kategori</option>
-                            {categories.map((c) => (
-                                <option key={c.id} value={c.nama}>{c.nama}</option>
-                            ))}
-                        </select>
+                    <div className={`rounded-2xl border px-4 py-3 shadow-sm flex items-center gap-2 sm:w-80 shrink-0 transition-all duration-200 ${
+                        filterCat
+                            ? 'bg-indigo-50 border-indigo-300'
+                            : 'bg-white border-gray-200'
+                    }`}>
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                            filterCat ? 'bg-indigo-500' : 'bg-gray-100'
+                        }`}>
+                            <svg className={`w-3.5 h-3.5 ${filterCat ? 'text-white' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                            </svg>
+                        </div>
+                        <div className="flex-1 min-w-0 relative">
+                            <select
+                                value={filterCat}
+                                onChange={(e) => setFilterCat(e.target.value)}
+                                className={`w-full text-sm font-medium bg-transparent focus:outline-none cursor-pointer appearance-none pr-5 truncate transition-colors ${
+                                    filterCat ? 'text-indigo-700' : 'text-gray-500'
+                                }`}
+                            >
+                                <option value="">Semua Kategori</option>
+                                {categories.map((c) => (
+                                    <option key={c.id} value={c.nama}>{c.nama}</option>
+                                ))}
+                            </select>
+                            <svg className={`absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${filterCat ? 'text-indigo-400' : 'text-gray-300'}`}
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
                         {filterCat && (
-                            <button onClick={() => setFilterCat('')} className="text-gray-300 hover:text-gray-500 shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <button
+                                onClick={() => setFilterCat('')}
+                                className="shrink-0 w-5 h-5 rounded-full bg-indigo-200 hover:bg-indigo-300 flex items-center justify-center transition-colors"
+                                title="Kosongkan filter"
+                            >
+                                <svg className="w-2.5 h-2.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         )}
