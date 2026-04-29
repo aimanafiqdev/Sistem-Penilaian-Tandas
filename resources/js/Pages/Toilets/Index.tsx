@@ -22,8 +22,14 @@ interface Toilet {
     created_at: string;
 }
 
+interface Category {
+    id: number;
+    nama: string;
+}
+
 interface PageProps {
     toilets: Toilet[];
+    categories: Category[];
 }
 
 const TYPE_CONFIG: Record<ToiletTypeOption, { label: string; bg: string; text: string; dot: string }> = {
@@ -33,7 +39,7 @@ const TYPE_CONFIG: Record<ToiletTypeOption, { label: string; bg: string; text: s
     oku:       { label: 'OKU',       bg: 'bg-amber-50',  text: 'text-amber-700',  dot: 'bg-amber-400' },
 };
 
-export default function Index({ toilets }: PageProps) {
+export default function Index({ toilets, categories }: PageProps) {
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [filterCat, setFilterCat] = useState<string>('');
@@ -51,12 +57,6 @@ export default function Index({ toilets }: PageProps) {
         0,
     );
 
-    const categories = useMemo(() => {
-        const seen = new Set<string>();
-        toilets.forEach((t) => { if (t.category) seen.add(t.category.nama); });
-        return Array.from(seen).sort();
-    }, [toilets]);
-
     const grouped = useMemo(() => {
         const filtered = filterCat
             ? toilets.filter((t) => t.category?.nama === filterCat)
@@ -69,6 +69,14 @@ export default function Index({ toilets }: PageProps) {
         });
         return map;
     }, [toilets, filterCat]);
+
+    // Categories to render — when filtering, always show that category (even if empty)
+    const visibleCategories = useMemo(() => {
+        if (filterCat) {
+            return categories.filter((c) => c.nama === filterCat);
+        }
+        return categories.filter((c) => grouped.has(c.nama));
+    }, [categories, filterCat, grouped]);
 
     return (
         <AppLayout
@@ -118,7 +126,7 @@ export default function Index({ toilets }: PageProps) {
                         >
                             <option value="">Semua Kategori</option>
                             {categories.map((c) => (
-                                <option key={c} value={c}>{c}</option>
+                                <option key={c.id} value={c.nama}>{c.nama}</option>
                             ))}
                         </select>
                         {filterCat && (
@@ -152,17 +160,12 @@ export default function Index({ toilets }: PageProps) {
                         Tambah Tandas Pertama
                     </Link>
                 </div>
-            ) : grouped.size === 0 ? (
-                <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
-                    <p className="text-sm text-gray-400">Tiada premis dalam kategori ini.</p>
-                    <button onClick={() => setFilterCat('')} className="mt-2 text-xs text-blue-600 hover:underline">
-                        Papar semua
-                    </button>
-                </div>
             ) : (
                 <div className="space-y-8">
-                    {Array.from(grouped.entries()).map(([catName, catToilets]) => (
-                        <div key={catName}>
+                    {visibleCategories.map((cat) => {
+                        const catToilets = grouped.get(cat.nama) ?? [];
+                        return (
+                        <div key={cat.id}>
                             {/* Category heading */}
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="flex items-center gap-2">
@@ -170,7 +173,7 @@ export default function Index({ toilets }: PageProps) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                             d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
-                                    <h2 className="text-sm font-bold text-gray-800">{catName}</h2>
+                                    <h2 className="text-sm font-bold text-gray-800">{cat.nama}</h2>
                                 </div>
                                 <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">
                                     {catToilets.length} premis
@@ -178,7 +181,27 @@ export default function Index({ toilets }: PageProps) {
                                 <div className="flex-1 h-px bg-gray-100" />
                             </div>
 
-                            {/* Toilet cards grid */}
+                            {catToilets.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                    <div className="w-12 h-12 bg-white rounded-xl border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
+                                        <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-400 mb-1">Tiada tandas dalam kategori ini</p>
+                                    <p className="text-xs text-gray-300 mb-4">Tambah premis baru untuk kategori <span className="font-semibold">{cat.nama}</span></p>
+                                    <Link
+                                        href="/toilets/create"
+                                        className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Tambah Tandas
+                                    </Link>
+                                </div>
+                            ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {catToilets.map((toilet) => {
                                     const jumlahKubikel = toilet.toilet_types.reduce((s, t) => s + t.bilangan_kubikel, 0);
@@ -297,8 +320,10 @@ export default function Index({ toilets }: PageProps) {
                                     );
                                 })}
                             </div>
+                            )}
                         </div>
-                    ))}
+                    );
+                })}
                 </div>
             )}
 

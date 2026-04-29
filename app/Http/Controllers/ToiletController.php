@@ -70,7 +70,8 @@ class ToiletController extends Controller
             ->map(fn ($toilet) => $this->mapToilet($toilet));
 
         return Inertia::render('Toilets/Index', [
-            'toilets' => $toilets,
+            'toilets'    => $toilets,
+            'categories' => $this->allCategories(),
         ]);
     }
 
