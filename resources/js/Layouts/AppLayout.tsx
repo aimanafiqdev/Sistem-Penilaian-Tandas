@@ -9,6 +9,7 @@ interface Props {
 }
 
 interface PageProps {
+    auth: { user: { id: number; name: string; email: string } };
     flash?: { success?: string; error?: string };
     [key: string]: unknown;
 }
@@ -149,7 +150,7 @@ function Toast({ item, onClose }: { item: ToastItem; onClose: (id: number) => vo
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 export default function AppLayout({ children, title, subtitle, action }: Props) {
-    const { flash } = usePage<PageProps>().props;
+    const { flash, auth } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -250,7 +251,31 @@ export default function AppLayout({ children, title, subtitle, action }: Props) 
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="px-4 py-4 border-t border-slate-800">
+                <div className="px-3 py-4 border-t border-slate-800 space-y-3">
+                    <div className="flex items-center gap-3 px-3 py-2">
+                        <div className="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-slate-300">
+                                {auth.user.name.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-300 truncate">{auth.user.name}</p>
+                            <p className="text-[10px] text-slate-500 truncate">{auth.user.email}</p>
+                        </div>
+                    </div>
+                    <Link
+                        href={route('logout')}
+                        method="post"
+                        as="button"
+                        onClick={closeSidebar}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-all duration-150"
+                    >
+                        <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Log Keluar
+                    </Link>
                     <p className="text-[11px] text-slate-600 text-center leading-relaxed">
                         © 2025 Kementerian Kesihatan Malaysia
                     </p>
