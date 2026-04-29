@@ -239,6 +239,7 @@ class AuditController extends Controller
             'stats'          => $stats,
             'kategoriReport' => $kategoriReport,
             'bulan'          => now()->translatedFormat('F Y'),
+            'categories'     => Category::orderBy('nama')->get()->map(fn($c) => ['id' => $c->id, 'nama' => $c->nama])->values(),
         ]);
     }
 

@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface AuditRecord {
     id: number;
@@ -38,11 +38,17 @@ interface KategoriReport {
     tercorot: KategoriReportEntry;
 }
 
+interface Category {
+    id: number;
+    nama: string;
+}
+
 interface PageProps {
     audits: AuditRecord[];
     stats: Stats;
     kategoriReport: KategoriReport[];
     bulan: string;
+    categories: Category[];
 }
 
 // "dd/mm/yyyy" → "yyyy-mm-dd" for ISO comparison
@@ -247,17 +253,24 @@ function KategoriReportCard({ report, bulan }: { report: KategoriReport; bulan: 
     );
 }
 
-export default function Index({ audits, stats, kategoriReport, bulan }: PageProps) {
-    const [search,     setSearch]     = useState('');
-    const [dateFrom,   setDateFrom]   = useState('');
-    const [dateTo,     setDateTo]     = useState('');
-    const [starFilter, setStarFilter] = useState<number | null>(null);
-    const [filterCat,  setFilterCat]  = useState('');
-    const [sort,       setSort]       = useState<SortKey>('terbaru');
+export default function Index({ audits, stats, kategoriReport, bulan, categories }: PageProps) {
+    const [search,      setSearch]     = useState('');
+    const [dateFrom,    setDateFrom]   = useState('');
+    const [dateTo,      setDateTo]     = useState('');
+    const [starFilter,  setStarFilter] = useState<number | null>(null);
+    const [filterCat,   setFilterCat]  = useState('');
+    const [sort,        setSort]       = useState<SortKey>('terbaru');
+    const [catDropOpen, setCatDropOpen] = useState(false);
+    const catDropRef = useRef<HTMLDivElement>(null);
 
-    const categories = useMemo(() => {
-        return [...new Set(audits.map((a) => a.kategori))].sort();
-    }, [audits]);
+    useEffect(() => {
+        if (!catDropOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (!catDropRef.current?.contains(e.target as Node)) setCatDropOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [catDropOpen]);
 
     const reportByKat = useMemo(() => {
         const m = new Map<string, KategoriReport>();
@@ -302,9 +315,11 @@ export default function Index({ audits, stats, kategoriReport, bulan }: PageProp
     }, [filtered]);
 
     const visibleCategories = useMemo(() => {
-        if (filterCat) return categories.filter((c) => c === filterCat && grouped.has(c));
-        return categories.filter((c) => grouped.has(c));
-    }, [categories, filterCat, grouped]);
+        const hasOtherFilters = !!(search || dateFrom || dateTo || starFilter !== null);
+        if (filterCat) return categories.filter((c) => c.nama === filterCat);
+        if (hasOtherFilters) return categories.filter((c) => grouped.has(c.nama));
+        return categories;
+    }, [categories, filterCat, grouped, search, dateFrom, dateTo, starFilter]);
 
     const hasFilter = !!(search || dateFrom || dateTo || starFilter !== null || filterCat);
 
@@ -419,25 +434,87 @@ export default function Index({ audits, stats, kategoriReport, bulan }: PageProp
                         </div>
 
                         {/* Category */}
-                        <div className="relative">
-                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h2a1 1 0 010 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h10a1 1 0 010 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 010 2H4a1 1 0 01-1-1z" />
-                            </svg>
-                            <select
-                                value={filterCat}
-                                onChange={(e) => setFilterCat(e.target.value)}
-                                className="pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white cursor-pointer"
+                        <div ref={catDropRef} className="relative">
+                            <button
+                                onClick={() => setCatDropOpen((o) => !o)}
+                                className={`flex items-center gap-2 pl-3 pr-3 py-2 text-sm border rounded-xl transition-all duration-200 ${
+                                    filterCat
+                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                                }`}
                             >
-                                <option value="">Semua Kategori</option>
-                                {categories.map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                            <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
+                                <svg className={`w-4 h-4 shrink-0 ${filterCat ? 'text-indigo-500' : 'text-gray-400'}`}
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                                </svg>
+                                <span className="max-w-36 truncate font-medium whitespace-nowrap">
+                                    {filterCat || 'Semua Kategori'}
+                                </span>
+                                {filterCat ? (
+                                    <span
+                                        role="button"
+                                        onClick={(e) => { e.stopPropagation(); setFilterCat(''); setCatDropOpen(false); }}
+                                        className="w-4 h-4 rounded-full bg-indigo-200 hover:bg-indigo-300 flex items-center justify-center shrink-0 transition-colors"
+                                    >
+                                        <svg className="w-2.5 h-2.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </span>
+                                ) : (
+                                    <svg className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${catDropOpen ? 'rotate-180 text-indigo-400' : 'text-gray-300'}`}
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                )}
+                            </button>
+
+                            {catDropOpen && (
+                                <div className="absolute top-full left-0 mt-1.5 min-w-64 bg-white rounded-xl border border-gray-100 shadow-xl z-50 overflow-hidden">
+                                    <div className="max-h-64 overflow-y-auto py-1.5">
+                                        <button
+                                            onClick={() => { setFilterCat(''); setCatDropOpen(false); }}
+                                            className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left transition-colors ${
+                                                !filterCat ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                                !filterCat ? 'border-indigo-500 bg-indigo-500' : 'border-gray-200'
+                                            }`}>
+                                                {!filterCat && (
+                                                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                            </span>
+                                            Semua Kategori
+                                        </button>
+
+                                        <div className="h-px bg-gray-100 mx-3 my-1" />
+
+                                        {categories.map((c) => (
+                                            <button
+                                                key={c.id}
+                                                onClick={() => { setFilterCat(c.nama); setCatDropOpen(false); }}
+                                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-left transition-colors ${
+                                                    filterCat === c.nama ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                                    filterCat === c.nama ? 'border-indigo-500 bg-indigo-500' : 'border-gray-200'
+                                                }`}>
+                                                    {filterCat === c.nama && (
+                                                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </span>
+                                                {c.nama}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sort */}
@@ -570,7 +647,7 @@ export default function Index({ audits, stats, kategoriReport, bulan }: PageProp
                         Mula Audit Pertama
                     </Link>
                 </div>
-            ) : filtered.length === 0 ? (
+            ) : filtered.length === 0 && !filterCat ? (
                 <div className="bg-white rounded-2xl border border-dashed border-gray-200 py-16 text-center">
                     <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
                         <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -589,28 +666,62 @@ export default function Index({ audits, stats, kategoriReport, bulan }: PageProp
             ) : (
                 <div className="space-y-8">
                     {visibleCategories.map((cat) => {
-                        const catAudits = grouped.get(cat)!;
-                        const report    = reportByKat.get(cat);
+                        const catAudits = grouped.get(cat.nama) ?? [];
+                        const report    = reportByKat.get(cat.nama);
                         return (
-                            <div key={cat}>
+                            <div key={cat.id}>
                                 {/* Category heading */}
                                 <div className="flex items-center gap-3 mb-3">
-                                    <h3 className="text-sm font-bold text-gray-700">{cat}</h3>
-                                    <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                        </svg>
+                                        <h3 className="text-sm font-bold text-gray-800">{cat.nama}</h3>
+                                    </div>
+                                    <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">
                                         {catAudits.length} audit
                                     </span>
-                                    <div className="flex-1 h-px bg-gray-200" />
+                                    <div className="flex-1 h-px bg-gray-100" />
                                 </div>
 
-                                {/* Monthly report card */}
-                                {report && <KategoriReportCard report={report} bulan={bulan} />}
+                                {catAudits.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                        <div className="w-12 h-12 bg-white rounded-xl border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
+                                            <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-400 mb-1">Tiada audit dalam kategori ini</p>
+                                        <p className="text-xs text-gray-300 mb-4">
+                                            Belum ada audit dijalankan untuk premis dalam kategori{' '}
+                                            <span className="font-semibold">{cat.nama}</span>
+                                        </p>
+                                        <Link
+                                            href="/toilets"
+                                            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                            Mula Audit
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Monthly report card */}
+                                        {report && <KategoriReportCard report={report} bulan={bulan} />}
 
-                                {/* Audit list */}
-                                <div className="space-y-3">
-                                    {catAudits.map((audit) => (
-                                        <AuditCard key={audit.id} audit={audit} />
-                                    ))}
-                                </div>
+                                        {/* Audit list */}
+                                        <div className="space-y-3">
+                                            {catAudits.map((audit) => (
+                                                <AuditCard key={audit.id} audit={audit} />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         );
                     })}
