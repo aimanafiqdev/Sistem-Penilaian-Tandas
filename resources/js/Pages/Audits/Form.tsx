@@ -284,8 +284,218 @@ const PANDUAN_A = [
     },
 ];
 
-function PanduanPemarkahan() {
+const PANDUAN_B = [
+    {
+        bil: 5, title: 'Lantai', jumlah: 20,
+        items: [
+            { penerangan: 'Lantai mestilah kering, tiada kesan tompokan air (water mark) dan tidak licin', markah: 5 },
+            { penerangan: 'Jubin lantai tiada kesan retak atau pecah', markah: 3 },
+            { penerangan: 'Bersih dan bebas dari sampah seperti serpihan tisu dan plastik', markah: 3 },
+            { penerangan: 'Tiada habuk dan kesan daki pada jubin tandas', markah: 3 },
+            { penerangan: 'Tidak menggunakan Floor mat dan jika guna Floor mat maka ia hendaklah diselenggara dengan baik agar tidak memerangkap kotoran', markah: 3 },
+        ],
+    },
+    {
+        bil: 6, title: 'Mangkuk Tandas / Urinal', jumlah: 14,
+        items: [
+            { penerangan: 'Sistem flush automatik / manual berfungsi', markah: 5 },
+            { penerangan: 'Tiada retak dan sumbing pada permukaan mangkuk tandas / urinal', markah: 3 },
+            { penerangan: 'Tiada kesan tompokan air kencing dan najis', markah: 3 },
+            { penerangan: 'Tiada kesan kehitaman dan daki pada permukaan mangkuk tandas / urinal', markah: 3 },
+        ],
+    },
+    {
+        bil: 7, title: 'Dinding', jumlah: 12,
+        items: [
+            { penerangan: 'Bahan mudah dicuci dan kalis air', markah: 3 },
+            { penerangan: 'Tiada kesan retak / pecah dinding', markah: 3 },
+            { penerangan: 'Bebas dari kesan tompokan habuk dan air', markah: 3 },
+            { penerangan: 'Bebas dari kesan contengan / kotoran / bendasing yang melekat secara kekal / separa kekal di dinding', markah: 3 },
+        ],
+    },
+    {
+        bil: 8, title: 'Siling', jumlah: 9,
+        items: [
+            { penerangan: 'Sentiasa dalam keadaan bersih dan tidak bersawang', markah: 3 },
+            { penerangan: 'Tiada kesan retak / pecah', markah: 3 },
+            { penerangan: 'Tiada kesan tompok kekuningan akibat kebocoran sistem perpaipan (Jika tidak bersiling hendaklah bersih daripada kekotoran)', markah: 3 },
+        ],
+    },
+    {
+        bil: 9, title: 'Singki / Cuci Tangan', jumlah: 12,
+        items: [
+            { penerangan: 'Berkeadaan baik, tiada kesan retak pada permukaan singki / cuci tangan', markah: 3 },
+            { penerangan: 'Tiada kesan tompokan air (water mark) di atas permukaan rata singki', markah: 3 },
+            { penerangan: 'Pili air pada setiap singki cuci tangan berfungsi', markah: 3 },
+            { penerangan: 'Tiada kesan kehitaman dan daki', markah: 3 },
+        ],
+    },
+    {
+        bil: 10, title: 'Pintu', jumlah: 10,
+        items: [
+            { penerangan: 'Berada dalam keadaan baik, permukaan dari bahan kalis air dan tahan lama serta dipasang mengikut sistem terbuka ke arah dalam', markah: 3 },
+            { penerangan: 'Tombol tiada kesan habuk / tidak pudar / berkarat', markah: 3 },
+            { penerangan: 'Bebas dari kesan contengan / kotoran / bendasing yang melekat secara kekal / separa kekal di dinding', markah: 3 },
+            { penerangan: 'Semua pintu dilengkapi dengan set sistem selak yang berfungsi untuk keselamatan', markah: 1 },
+        ],
+    },
+    {
+        bil: 11, title: 'Saliran Permukaan (Longkang / Parit / Gully Trap)', jumlah: 7,
+        items: [
+            { penerangan: 'Bersih dan tidak berbau', markah: 3 },
+            { penerangan: 'Tidak tersumbat dan tiada kerosakan', markah: 3 },
+            { penerangan: 'Pengaliran air berjalan lancar dan sempurna', markah: 1 },
+        ],
+    },
+    {
+        bil: 12, title: 'Pili Air / Hos Air / Bidet', jumlah: 10,
+        items: [
+            { penerangan: 'Pili air / hos air / bidet disediakan di dalam setiap kubikel tandas', markah: 3 },
+            { penerangan: 'Tiada kesan karat / kekuningan pada pili air / bidet', markah: 3 },
+            { penerangan: 'Pili air / hos air / bidet disangkut dengan kemas pada penyangkut yang disediakan dan tidak bersentuhan dengan lantai', markah: 3 },
+            { penerangan: 'Pili air / hos air / bidet berfungsi sepenuhnya', markah: 1 },
+        ],
+    },
+];
+
+const PANDUAN_C = [
+    {
+        bil: 13, title: 'Bekas Sabun Cecair', jumlah: 6,
+        items: [
+            { penerangan: 'Bekas mengandungi sabun dan berfungsi', markah: 3 },
+            { penerangan: 'Bersih dan bebas dari kesan contengan / kotoran / bendasing yang melekat secara kekal / separa kekal pada bekas', markah: 3 },
+        ],
+    },
+    {
+        bil: 14, title: 'Bekas Tisu / Tisu Tangan / Alat Pengering Tangan', jumlah: 7,
+        items: [
+            { penerangan: 'Disediakan di tempat yang mudah dilihat', markah: 3 },
+            { penerangan: 'Bersih dan bebas dari kesan contengan / kotoran / bendasing yang melekat secara kekal / separa kekal pada bekas', markah: 3 },
+            { penerangan: 'Bekalan tisu / alat pengering tangan sentiasa mencukupi untuk kemudahan pengguna dan diisi semula mengikut keperluan', markah: 1 },
+        ],
+    },
+    {
+        bil: 15, title: 'Tong Sampah / Tong Sanitari', jumlah: 15,
+        items: [
+            { penerangan: 'Disediakan mencukupi untuk keperluan tandas', markah: 3 },
+            { penerangan: 'Tiada bau', markah: 3 },
+            { penerangan: 'Berpenutup / dilengkapi dengan karung plastik', markah: 3 },
+            { penerangan: 'Kapasiti buangan sampah tidak melebihi 3/4 tong sampah / tong sanitari', markah: 3 },
+            { penerangan: 'Bersih dan bebas dari kesan contengan / kotoran / bendasing yang melekat secara kekal / separa kekal pada tong sampah / tong sanitari', markah: 3 },
+        ],
+    },
+];
+
+const PANDUAN_D = [
+    {
+        bil: 16, title: 'Tunjuk Arah dan Simbol Jantina', jumlah: 7,
+        items: [
+            { penerangan: 'Tunjuk arah kedudukan tandas hendaklah dipasang dengan jelas dan secukupnya di tempat-tempat yang mudah dilihat bagi kemudahan orang ramai', markah: 3 },
+            { penerangan: 'Simbol jantina hendaklah disediakan di hadapan setiap laluan utama tandas yang membezakan antara lelaki / perempuan / OKU', markah: 3 },
+            { penerangan: 'Memastikan pencahayaan pada papan tanda adalah mencukupi pada waktu malam. Digalakkan menggunakan papan tanda pantul cahaya yang mudah dilihat', markah: 1 },
+        ],
+    },
+    {
+        bil: 17, title: 'Notis Pemberitahuan (Papan Tanda Arahan / Peringatan / Poster)', jumlah: 2,
+        items: [
+            { penerangan: 'Papan tanda arahan / peringatan / poster dipasang di lokasi tumpuan pengguna / bersesuaian bagi membolehkan orang ramai membaca dan mematuhi arahan / peringatan yang hendak disampaikan', markah: 1 },
+            { penerangan: "Papan tanda 'Larangan Merokok' diletakkan di lokasi yang bersesuaian dan mudah dilihat", markah: 1 },
+        ],
+    },
+];
+
+const PANDUAN_E = [
+    {
+        bil: 18, title: 'Jadual Pembersihan', jumlah: 11,
+        items: [
+            { penerangan: 'Ada Jadual Pembersihan disediakan dan dipamer di tempat yang mudah dilihat', markah: 5 },
+            { penerangan: 'Jadual Pembersihan yang ditetapkan dipatuhi dengan kekerapan pencucian major - dua hingga tiga kali sehari mengikut situasi semasa dan minor - setiap kali pengguna selesai menggunakan tandas kubikel', markah: 3 },
+            { penerangan: 'Pembersihan harian direkod dan ada pengesahan pemantauan harian Ketua Jabatan / Pegawai bertanggungjawab / Penyelia', markah: 3 },
+        ],
+    },
+    {
+        bil: 19, title: 'Pengurusan Pekerja', jumlah: 3,
+        items: [
+            { penerangan: 'Penggunaan Peralatan Perlindungan Diri (PPE) yang sepatutnya untuk mengelakkan sentuhan secara langsung pada bahan-bahan cucian, kekotoran pada diri dan kecederaan', markah: 3 },
+        ],
+    },
+    {
+        bil: 20, title: 'Kekemasan di dalam Ruang Tandas', jumlah: 8,
+        items: [
+            { penerangan: 'Susun atur dan konsep hiasan di dalam ruang tandas kemas dan selesa', markah: 5 },
+            { penerangan: 'Amalan 5S diguna pakai untuk susun atur di dalam tandas. (Bersih, label pada kubikel / singki)', markah: 3 },
+        ],
+    },
+    {
+        bil: 21, title: 'Stor / Tempat Menyimpan Barang*', jumlah: 4,
+        items: [
+            { penerangan: 'Stor disediakan untuk penyimpanan barang dan alatan pencucian. (*Kubikel tandas tidak digunakan sebagai tempat menyimpan barang-barang dan alatan pencucian)', markah: 3 },
+            { penerangan: 'Susun atur di dalam stor. (Bersih, detergen dan alatan cucian dilabel)', markah: 1 },
+        ],
+    },
+];
+
+const PANDUAN_F = [
+    {
+        bil: 22, title: 'Bahan Pewangi', jumlah: 4,
+        items: [
+            { penerangan: 'Bahan pewangi seperti air freshener atau aromatherapy disediakan untuk memberi keselesaan kepada pengguna', markah: 3 },
+            { penerangan: 'Berbau wangi / semula jadi setiap masa', markah: 1 },
+        ],
+    },
+    {
+        bil: 23, title: 'Cermin Muka', jumlah: 7,
+        items: [
+            { penerangan: 'Cermin muka disediakan dan dipasang pada dinding pada lokasi pada ketinggian yang sesuai', markah: 3 },
+            { penerangan: 'Tiada kesan air, jari atau tompokan daki/habuk pada permukaan cermin dan bingkai tidak berkarat atau berkulat', markah: 3 },
+            { penerangan: 'Berkilat', markah: 1 },
+        ],
+    },
+    {
+        bil: 24, title: 'Penyangkut Pakaian / Barang', jumlah: 4,
+        items: [
+            { penerangan: 'Penyangkut pakaian / barang di setiap kubikel', markah: 3 },
+            { penerangan: 'Bersih dan bebas dari kesan kotoran / bendasing yang melekat secara kekal / separa kekal pada penyangkut', markah: 1 },
+        ],
+    },
+    {
+        bil: 25, title: 'Dekorasi', jumlah: 4,
+        items: [
+            { penerangan: 'Hiasan pokok bunga hidup / hiasan-hiasan lain disediakan bersesuaian dengan konsep tandas', markah: 3 },
+            { penerangan: 'Bersih dan bebas dari kesan kotoran / bendasing', markah: 1 },
+        ],
+    },
+    {
+        bil: 26, title: 'Inovasi', jumlah: 3,
+        items: [
+            { penerangan: '3R / bahan kitar semula / inisiatif hijau / dan lain-lain', markah: 2 },
+            { penerangan: 'Maklum balas / kepuasan pengguna (Melalui aplikasi MyWC atau apa-apa kaedah maklum balas)', markah: 1 },
+        ],
+    },
+    {
+        bil: 27, title: 'Kawalan Vektor', jumlah: 3,
+        items: [
+            { penerangan: 'Bebas daripada tempat pembiakan vektor pembawa penyakit dan binatang berbisa', markah: 3 },
+        ],
+    },
+];
+
+const PANDUAN_G = [
+    {
+        bil: 28, title: 'Ruang Tukar Lampin', jumlah: 4,
+        items: [
+            { penerangan: 'Ruang menukar lampin / napkin disediakan', markah: 1 },
+            { penerangan: 'Dalam keadaan bersih dan selesa', markah: 3 },
+        ],
+    },
+];
+
+const PANDUAN_MAP: Record<string, typeof PANDUAN_A> = { A: PANDUAN_A, B: PANDUAN_B, C: PANDUAN_C, D: PANDUAN_D, E: PANDUAN_E, F: PANDUAN_F, G: PANDUAN_G };
+
+function PanduanPemarkahan({ sectionId }: { sectionId: string }) {
     const [open, setOpen] = useState(false);
+    const groups = PANDUAN_MAP[sectionId];
+    if (!groups) return null;
 
     return (
         <div className="border-b border-gray-100">
@@ -299,7 +509,7 @@ function PanduanPemarkahan() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    Panduan Pemarkahan — Seksyen A
+                    Panduan Pemarkahan — Seksyen {sectionId}
                 </span>
                 <svg className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,7 +527,7 @@ function PanduanPemarkahan() {
                             <div className="px-2 py-2 border-l border-blue-500 text-center">Markah</div>
                         </div>
 
-                        {PANDUAN_A.map((group, gi) => (
+                        {groups.map((group, gi) => (
                             <div key={group.bil} className={gi % 2 === 0 ? 'bg-white' : 'bg-blue-50/40'}>
                                 {/* Group title row */}
                                 <div className="grid grid-cols-[2rem_1fr_3.5rem] border-t border-blue-100">
@@ -714,8 +924,8 @@ export default function Form({ audit }: PageProps) {
                             )}
                         </div>
 
-                        {/* Panduan Pemarkahan — Section A only */}
-                        {showCriteria && sectionId === 'A' && <PanduanPemarkahan />}
+                        {/* Panduan Pemarkahan */}
+                        {showCriteria && <PanduanPemarkahan sectionId={sectionId} />}
 
                         {/* Scoring Guide */}
                         {showCriteria && (
