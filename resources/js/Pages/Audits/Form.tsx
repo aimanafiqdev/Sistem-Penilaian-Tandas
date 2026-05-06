@@ -480,9 +480,9 @@ const PANDUAN_F = [
     },
 ];
 
-const PANDUAN_G = [
+const PANDUAN_H = [
     {
-        bil: 28, title: 'Ruang Tukar Lampin', jumlah: 4,
+        bil: 28, title: 'Ruang Menukar Lampin / Napkin', jumlah: 4,
         items: [
             { penerangan: 'Ruang menukar lampin / napkin disediakan', markah: 1 },
             { penerangan: 'Dalam keadaan bersih dan selesa', markah: 3 },
@@ -490,7 +490,7 @@ const PANDUAN_G = [
     },
 ];
 
-const PANDUAN_MAP: Record<string, typeof PANDUAN_A> = { A: PANDUAN_A, B: PANDUAN_B, C: PANDUAN_C, D: PANDUAN_D, E: PANDUAN_E, F: PANDUAN_F, G: PANDUAN_G };
+const PANDUAN_MAP: Record<string, typeof PANDUAN_A> = { A: PANDUAN_A, B: PANDUAN_B, C: PANDUAN_C, D: PANDUAN_D, E: PANDUAN_E, F: PANDUAN_F, H: PANDUAN_H };
 
 function PanduanPemarkahan({ sectionId }: { sectionId: string }) {
     const [open, setOpen] = useState(false);
