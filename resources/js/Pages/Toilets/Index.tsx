@@ -11,6 +11,14 @@ interface ToiletType {
     bilangan_kubikel: number;
 }
 
+type ToiletStatus = 'hijau' | 'oren' | 'merah';
+
+const STATUS_CONFIG: Record<ToiletStatus, { label: string; bg: string; text: string; dot: string; ring: string }> = {
+    hijau: { label: 'Boleh Digunakan',       bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500', ring: 'ring-emerald-300' },
+    oren:  { label: 'Sedang Diselenggara',   bg: 'bg-orange-100',  text: 'text-orange-700',  dot: 'bg-orange-500',  ring: 'ring-orange-300'  },
+    merah: { label: 'Tidak Selamat',         bg: 'bg-red-100',     text: 'text-red-700',     dot: 'bg-red-500',     ring: 'ring-red-300'     },
+};
+
 interface Toilet {
     id: number;
     category: { id: number; nama: string } | null;
@@ -18,6 +26,7 @@ interface Toilet {
     alamat: string | null;
     latitude: number | null;
     longitude: number | null;
+    status: ToiletStatus;
     toilet_types: ToiletType[];
     created_at: string;
 }
@@ -282,7 +291,12 @@ export default function Index({ toilets, categories }: PageProps) {
                                         <div key={toilet.id}
                                             className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 flex flex-col overflow-hidden"
                                         >
-                                            <div className="h-1.5 bg-linear-to-r from-blue-500 to-blue-400" />
+                                            {/* Status bar */}
+                                            <div className={`h-1.5 ${
+                                                toilet.status === 'merah' ? 'bg-red-500' :
+                                                toilet.status === 'oren'  ? 'bg-orange-400' :
+                                                'bg-emerald-400'
+                                            }`} />
 
                                             <div className="p-5 flex flex-col flex-1">
                                                 <div className="flex-1 space-y-4">
@@ -303,6 +317,30 @@ export default function Index({ toilets, categories }: PageProps) {
                                                         <span className="shrink-0 text-xs text-gray-300 bg-gray-50 px-2 py-1 rounded-md">
                                                             {toilet.created_at}
                                                         </span>
+                                                    </div>
+
+                                                    {/* Status badge + changer */}
+                                                    <div className="flex items-center gap-2">
+                                                        {(['hijau', 'oren', 'merah'] as ToiletStatus[]).map((s) => {
+                                                            const cfg = STATUS_CONFIG[s];
+                                                            const active = toilet.status === s;
+                                                            return (
+                                                                <button
+                                                                    key={s}
+                                                                    type="button"
+                                                                    title={cfg.label}
+                                                                    onClick={() => router.patch(`/toilets/${toilet.id}/status`, { status: s })}
+                                                                    className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-all ${
+                                                                        active
+                                                                            ? `${cfg.bg} ${cfg.text} ring-2 ${cfg.ring}`
+                                                                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                                                    }`}
+                                                                >
+                                                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? cfg.dot : 'bg-gray-300'}`} />
+                                                                    {cfg.label}
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
 
                                                     {/* Toilet Type Badges */}

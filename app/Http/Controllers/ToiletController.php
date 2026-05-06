@@ -26,6 +26,7 @@ class ToiletController extends Controller
                 'type'             => $t->type,
                 'bilangan_kubikel' => $t->bilangan_kubikel,
             ])->values()->toArray(),
+            'status'     => $toilet->status ?? 'hijau',
             'created_at' => $toilet->created_at->format('d/m/Y'),
         ];
     }
@@ -141,6 +142,13 @@ class ToiletController extends Controller
         return redirect()
             ->route('toilets.index')
             ->with('success', 'Premis tandas berjaya dikemaskini.');
+    }
+
+    public function updateStatus(Request $request, Toilet $toilet): RedirectResponse
+    {
+        $request->validate(['status' => 'required|in:hijau,oren,merah']);
+        $toilet->update(['status' => $request->status]);
+        return back();
     }
 
     public function destroy(Toilet $toilet): RedirectResponse

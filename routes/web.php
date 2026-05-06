@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     Route::resource('toilets', ToiletController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::patch('/toilets/{toilet}/status', [ToiletController::class, 'updateStatus'])->name('toilets.status');
 
     Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
     Route::get('/audits/create', [AuditController::class, 'create'])->name('audits.create');

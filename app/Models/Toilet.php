@@ -14,6 +14,7 @@ class Toilet extends Model
         'alamat',
         'latitude',
         'longitude',
+        'status',
     ];
 
     protected $casts = [
