@@ -241,6 +241,125 @@ function SignatureCanvas({ label, onSave }: {
     );
 }
 
+// ── Panduan Pemarkahan Seksyen A ─────────────────────────────────────────────
+
+const PANDUAN_A = [
+    {
+        bil: 1,
+        title: 'Bekalan Air',
+        jumlah: 18,
+        items: [
+            { penerangan: 'Ada bekalan air (Bekalan air dari sumber terawat Jabatan Bekalan Air berkaitan / sumber Sistem Tadahan Air Hujan (SPAH) / sumber Sistem Bekalan Air Graviti (GFS) / Telaga)', markah: 5 },
+            { penerangan: 'Bekalan dan tekanan air mencukupi untuk kapasiti pengguna', markah: 5 },
+            { penerangan: 'Sistem perpaipan, tangki air dan peralatan lain yang berkaitan dengannya hendaklah baik dan sentiasa berfungsi', markah: 5 },
+            { penerangan: 'Bekalan air bersih dan tiada kekuningan', markah: 3 },
+        ],
+    },
+    {
+        bil: 2,
+        title: 'Pengurusan Rawatan Kumbahan',
+        jumlah: 4,
+        items: [
+            { penerangan: 'Sistem rawatan kumbahan / tangki septik berfungsi dengan baik (Tidak berbau)', markah: 3 },
+            { penerangan: 'Rekod penyelenggaraan oleh pihak yang berkenaan', markah: 1 },
+        ],
+    },
+    {
+        bil: 3,
+        title: 'Pengudaraan',
+        jumlah: 9,
+        items: [
+            { penerangan: 'Pengudaraan mencukupi dan memuaskan', markah: 5 },
+            { penerangan: 'Diselenggara dengan baik', markah: 4 },
+        ],
+    },
+    {
+        bil: 4,
+        title: 'Pencahayaan',
+        jumlah: 9,
+        items: [
+            { penerangan: 'Pencahayaan mencukupi dan memuaskan', markah: 5 },
+            { penerangan: 'Diselenggara dengan baik', markah: 4 },
+        ],
+    },
+];
+
+function PanduanPemarkahan() {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className="border-b border-gray-100">
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+                <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    Panduan Pemarkahan — Seksyen A
+                </span>
+                <svg className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            {open && (
+                <div className="px-5 pb-4">
+                    <div className="rounded-xl border border-blue-100 overflow-hidden text-xs">
+                        {/* Table header */}
+                        <div className="grid grid-cols-[2rem_1fr_3.5rem] bg-blue-600 text-white font-bold">
+                            <div className="px-2 py-2 text-center">Bil</div>
+                            <div className="px-3 py-2 border-l border-blue-500">Penerangan</div>
+                            <div className="px-2 py-2 border-l border-blue-500 text-center">Markah</div>
+                        </div>
+
+                        {PANDUAN_A.map((group, gi) => (
+                            <div key={group.bil} className={gi % 2 === 0 ? 'bg-white' : 'bg-blue-50/40'}>
+                                {/* Group title row */}
+                                <div className="grid grid-cols-[2rem_1fr_3.5rem] border-t border-blue-100">
+                                    <div className="px-2 py-2 text-center font-bold text-blue-700">{group.bil}</div>
+                                    <div className="px-3 py-2 border-l border-blue-100 font-bold text-gray-800">
+                                        {group.title}
+                                    </div>
+                                    <div className="px-2 py-2 border-l border-blue-100" />
+                                </div>
+
+                                {/* Criteria rows */}
+                                {group.items.map((item, ii) => (
+                                    <div key={ii} className="grid grid-cols-[2rem_1fr_3.5rem] border-t border-blue-50">
+                                        <div className="px-2 py-1.5" />
+                                        <div className="px-3 py-1.5 border-l border-blue-100 text-gray-600 leading-relaxed">
+                                            {item.penerangan}
+                                        </div>
+                                        <div className="px-2 py-1.5 border-l border-blue-100 text-center font-bold text-gray-700">
+                                            {item.markah}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Total row */}
+                                <div className="grid grid-cols-[2rem_1fr_3.5rem] border-t border-blue-100 bg-blue-50">
+                                    <div className="px-2 py-1.5" />
+                                    <div className="px-3 py-1.5 border-l border-blue-100 font-bold italic text-gray-500 text-right">
+                                        Markah
+                                    </div>
+                                    <div className="px-2 py-1.5 border-l border-blue-100 text-center font-black text-blue-700">
+                                        {group.jumlah}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Form({ audit }: PageProps) {
@@ -594,6 +713,9 @@ export default function Form({ audit }: PageProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Panduan Pemarkahan — Section A only */}
+                        {showCriteria && sectionId === 'A' && <PanduanPemarkahan />}
 
                         {/* Scoring Guide */}
                         {showCriteria && (
