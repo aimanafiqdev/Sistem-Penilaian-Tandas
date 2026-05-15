@@ -143,6 +143,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/audits/{audit}/form', [AuditController::class, 'form'])->name('audits.form');
     Route::post('/audits/{audit}/submit', [AuditController::class, 'submit'])->name('audits.submit');
     Route::get('/audits/{audit}/result', [AuditController::class, 'result'])->name('audits.result');
+    Route::delete('/audits', [AuditController::class, 'bulkDestroy'])->name('audits.bulkDestroy');
 });
 
 require __DIR__.'/auth.php';

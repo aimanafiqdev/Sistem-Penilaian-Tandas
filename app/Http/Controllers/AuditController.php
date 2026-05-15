@@ -370,4 +370,11 @@ class AuditController extends Controller
             ],
         ]);
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'integer|exists:audits,id']);
+        Audit::whereIn('id', $request->ids)->delete();
+        return redirect()->route('audits.index')->with('success', count($request->ids) . ' audit berjaya dipadam.');
+    }
 }

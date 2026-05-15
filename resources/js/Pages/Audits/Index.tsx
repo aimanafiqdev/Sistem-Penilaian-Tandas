@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface AuditRecord {
@@ -99,11 +99,34 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     { key: 'terendah',  label: 'Markah Terendah'   },
 ];
 
-function AuditCard({ audit }: { audit: AuditRecord }) {
+function AuditCard({ audit, selectable, selected, onToggle }: {
+    audit: AuditRecord;
+    selectable?: boolean;
+    selected?: boolean;
+    onToggle?: () => void;
+}) {
     const rating = ratingLabel(audit.bintang);
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
-            <div className="flex items-start gap-3 sm:gap-4 p-4">
+        <div
+            className={`relative bg-white rounded-2xl border shadow-sm transition-all duration-200 overflow-hidden ${
+                selectable ? 'cursor-pointer' : 'hover:shadow-md hover:border-gray-300'
+            } ${selected ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'}`}
+            onClick={selectable ? onToggle : undefined}
+        >
+            {selectable && (
+                <div className="absolute top-3 left-3 z-10">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
+                        selected ? 'bg-red-500 border-red-500' : 'bg-white border-gray-300'
+                    }`}>
+                        {selected && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
+                    </div>
+                </div>
+            )}
+            <div className={`flex items-start gap-3 sm:gap-4 p-4 ${selectable ? 'pl-10' : ''}`}>
                 {/* Percentage Circle */}
                 <div className="shrink-0 w-14 h-14 relative mt-0.5">
                     <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
@@ -155,27 +178,29 @@ function AuditCard({ audit }: { audit: AuditRecord }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col gap-1.5 shrink-0">
-                    <Link
-                        href={`/audits/${audit.id}/result`}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Lihat
-                    </Link>
-                    <Link
-                        href={`/audits/create?toilet_id=${audit.toilet.id}`}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Audit Semula
-                    </Link>
-                </div>
+                {!selectable && (
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                        <Link
+                            href={`/audits/${audit.id}/result`}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Lihat
+                        </Link>
+                        <Link
+                            href={`/audits/create?toilet_id=${audit.toilet.id}`}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Audit Semula
+                        </Link>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -254,13 +279,16 @@ function KategoriReportCard({ report, bulan }: { report: KategoriReport; bulan: 
 }
 
 export default function Index({ audits, stats, kategoriReport, bulan, categories }: PageProps) {
-    const [search,      setSearch]     = useState('');
-    const [dateFrom,    setDateFrom]   = useState('');
-    const [dateTo,      setDateTo]     = useState('');
-    const [starFilter,  setStarFilter] = useState<number | null>(null);
-    const [filterCat,   setFilterCat]  = useState('');
-    const [sort,        setSort]       = useState<SortKey>('terbaru');
-    const [catDropOpen, setCatDropOpen] = useState(false);
+    const [search,        setSearch]       = useState('');
+    const [dateFrom,      setDateFrom]     = useState('');
+    const [dateTo,        setDateTo]       = useState('');
+    const [starFilter,    setStarFilter]   = useState<number | null>(null);
+    const [filterCat,     setFilterCat]    = useState('');
+    const [sort,          setSort]         = useState<SortKey>('terbaru');
+    const [catDropOpen,   setCatDropOpen]  = useState(false);
+    const [selectMode,    setSelectMode]   = useState(false);
+    const [selectedIds,   setSelectedIds]  = useState<Set<number>>(new Set());
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const catDropRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -332,20 +360,77 @@ export default function Index({ audits, stats, kategoriReport, bulan, categories
         setSort('terbaru');
     }
 
+    function toggleSelect(id: number) {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    }
+
+    function exitSelectMode() {
+        setSelectMode(false);
+        setSelectedIds(new Set());
+        setConfirmDelete(false);
+    }
+
+    function selectAll() {
+        setSelectedIds(new Set(filtered.map((a) => a.id)));
+    }
+
+    function handleDelete() {
+        router.delete('/audits', {
+            data: { ids: [...selectedIds] },
+            onSuccess: exitSelectMode,
+        });
+    }
+
     return (
         <AppLayout
             title="Senarai Audit"
             subtitle="Rekod penilaian kebersihan tandas awam KKM"
             action={
-                <Link
-                    href="/toilets"
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Audit Baharu
-                </Link>
+                <div className="flex items-center gap-2">
+                    {selectMode ? (
+                        <>
+                            <button
+                                onClick={selectAll}
+                                className="flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Pilih Semua
+                            </button>
+                            <button
+                                onClick={exitSelectMode}
+                                className="flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Batal
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {audits.length > 0 && (
+                                <button
+                                    onClick={() => setSelectMode(true)}
+                                    className="flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7l2 2 4-4" />
+                                    </svg>
+                                    Pilih
+                                </button>
+                            )}
+                            <Link
+                                href="/toilets"
+                                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Audit Baharu
+                            </Link>
+                        </>
+                    )}
+                </div>
             }
         >
             <Head title="Senarai Audit" />
@@ -717,7 +802,13 @@ export default function Index({ audits, stats, kategoriReport, bulan, categories
                                         {/* Audit list */}
                                         <div className="space-y-3">
                                             {catAudits.map((audit) => (
-                                                <AuditCard key={audit.id} audit={audit} />
+                                                <AuditCard
+                                                    key={audit.id}
+                                                    audit={audit}
+                                                    selectable={selectMode}
+                                                    selected={selectedIds.has(audit.id)}
+                                                    onToggle={() => toggleSelect(audit.id)}
+                                                />
                                             ))}
                                         </div>
                                     </>
@@ -725,6 +816,53 @@ export default function Index({ audits, stats, kategoriReport, bulan, categories
                             </div>
                         );
                     })}
+                </div>
+            )}
+            {/* ── Floating Delete Bar ───────────────────────────── */}
+            {selectMode && selectedIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-gray-700">
+                    <span className="text-sm font-semibold whitespace-nowrap">
+                        {selectedIds.size} dipilih
+                    </span>
+                    <div className="w-px h-4 bg-gray-600" />
+                    {confirmDelete ? (
+                        <>
+                            <span className="text-sm text-red-300 whitespace-nowrap">
+                                Padam {selectedIds.size} audit?
+                            </span>
+                            <button
+                                onClick={handleDelete}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Ya, Padam
+                            </button>
+                            <button
+                                onClick={() => setConfirmDelete(false)}
+                                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                            >
+                                Tidak
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setConfirmDelete(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Padam
+                        </button>
+                    )}
+                    <button
+                        onClick={exitSelectMode}
+                        className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                    >
+                        Batal
+                    </button>
                 </div>
             )}
         </AppLayout>
